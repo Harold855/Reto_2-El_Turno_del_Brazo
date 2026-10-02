@@ -1,16 +1,17 @@
-# Documento de diseño previo — Tabla DH del JetCobot (Ítem 1)
+# Documento de diseño previo — Tabla DH del JetCobot (Ítem 1) — v0.4
 
-> **Estado: BORRADOR.** Completar los campos `[ ... ]` y firmar antes de ejecutar las
-> mediciones. La predicción de cada pose se congela con un commit **anterior** a medir.
+> **Estado: BORRADOR listo para firmar.** Los campos `[ ... ]` los rellena el
+> equipo. Las predicciones de §5 ya están congeladas antes de medir.
 
 | Campo | Valor |
 |---|---|
 | Reto | RB-2 · El Turno del Brazo |
-| Equipo n.º | `[ ]` (ROS_DOMAIN_ID = 42 + n.º) |
+| Equipo n.º | **06** (ROS_DOMAIN_ID = 92) |
 | Integrantes | `[ ]`, `[ ]`, `[ ]`, `[ ]` |
 | Fecha del borrador | `[ ]` |
-| Fuente de la tabla | Deducción en pizarra por el equipo (foto adjunta en `docs/`, si se sube) |
+| Fuente de la tabla | Manual oficial Elephant Robotics / Página de cinemática myCobot 280 |
 | Implementación | `src/arm_broker/arm_broker/fk.py` (`DH`, `fk_matriz`, `fk`) |
+| Versión de este documento | v0.4 (DH del manual, origen {0} y efector definidos, 3 poses congeladas) |
 
 ## 1. Convención
 
@@ -33,103 +34,108 @@ La posición del efector es la última columna: `(x, y, z) = T_0_6[0:3, 3]`.
 Unidades: longitudes en **mm**, ángulos en **rad** dentro del código (la tabla usa grados).
 El ángulo DH es `θ_i = q_i + offset_i`, donde `q_i` es la lectura articular del robot.
 
-## 2. Tabla DH (deducida en pizarra)
+## 2. Tabla DH (Manual oficial myCobot 280)
 
-| i | θ_i | d_i [mm] | a_i [mm] | α_i |
-|:-:|:---|---:|---:|---:|
-| 1 | q1 | 134.75 | 0 | +90° |
-| 2 | q2 − 90° | 0 | −110 | 0° |
-| 3 | q3 | 0 | −96 | 0° |
-| 4 | q4 − 90° | 63.4 | 0 | +90° |
-| 5 | q5 + 90° | 75.55 | 0 | −90° |
-| 6 | q6 | 50 | 0 | 0° |
+| i | θ_i | d_i [mm] | a_i [mm] | α_i | offset |
+|:-:|:---|---:|---:|---:|---:|
+| 1 | q1 | 131.22 | 0 | +90° | 0° |
+| 2 | q2 − 90° | 0 | −110.4 | 0° | −90° |
+| 3 | q3 | 0 | −96 | 0° | 0° |
+| 4 | q4 − 90° | 63.4 | 0 | +90° | −90° |
+| 5 | q5 + 90° | 75.05 | 0 | −90° | +90° |
+| 6 | q6 | 45.6 | 0 | 0° | 0° |
 
-Correspondencia con el código (`fk.py`, columnas `alpha, a, d, offset_theta`):
+Correspondencia con `fk.py` (columnas `alpha, a, d, offset_theta`):
 
 ```python
 DH = [
-    ( math.pi / 2,    0.0, 134.75,           0.0),   # J1
-    (         0.0, -110.0,   0.00, -math.pi / 2),    # J2
+    ( math.pi / 2,    0.0, 131.22,           0.0),   # J1
+    (         0.0, -110.4,   0.00, -math.pi / 2),    # J2
     (         0.0,  -96.0,   0.00,           0.0),   # J3
     ( math.pi / 2,    0.0,  63.40, -math.pi / 2),    # J4
-    (-math.pi / 2,    0.0,  75.55,  math.pi / 2),    # J5
-    (         0.0,    0.0,  50.00,           0.0),   # J6
+    (-math.pi / 2,    0.0,  75.05,  math.pi / 2),    # J5
+    (         0.0,    0.0,  45.60,           0.0),   # J6
 ]
 ```
 
-### Puntos a confirmar antes de firmar
+**Valores descartados del equipo (NO usar):** d1=134.75, a2=−110, d5=75.55, d6=50.
+Provienen de una deducción previa en pizarra y no coinciden con el manual oficial.
 
-- [ ] **d5: 75.55 vs 75.05 mm.** El esquema de la pizarra rotula un eslabón como 75.05 y la
-      tabla dice 75.55. El código usa 75.55. La diferencia (0.5 mm) es irrelevante frente al
-      criterio de 10 mm, pero el documento debe ser consistente: elegir un valor y corregir
-      tabla, esquema y `fk.py` juntos.
-- [ ] **α4 = +90°.** En la foto el valor de la fila 4 se lee «10». Se asume +90° porque es lo
-      que implementa `fk.py` y lo que da una geometría coherente; confirmar con el esquema.
-- [ ] **Origen del marco {0}.** Definir con precisión el punto físico (eje de J1 a nivel de la
-      base) desde donde se mide con regla.
-- [ ] **Punto del efector.** Definir qué punto de la pinza/flange representa `T_0_6` (con
-      `d6 = 50 mm` la FK apunta a 50 mm del flange de J6 a lo largo de su eje) y medir a ese punto.
-
-## 3. Esquema de marcos (a completar con el dibujo)
-
-Insertar aquí el diagrama de ejes `z_i`, `x_i` por articulación (el de la pizarra, pasado en
-limpio). Ayuda de lectura de la cadena, de la base al efector:
+## 3. Esquema de marcos
 
 ```
-{0} base ── d1 = 134.75 ─▶ J1 (giro vertical)
-   └─ a2 = −110 ─▶ J2 (hombro)
+{0} base ── d1 = 131.22 ─▶ J1 (giro vertical)
+   └─ a2 = −110.4 ─▶ J2 (hombro)
         └─ a3 = −96 ─▶ J3 (codo)
              └─ d4 = 63.4 ─▶ J4
-                  └─ d5 = 75.55 ─▶ J5
-                       └─ d6 = 50 ─▶ J6 → efector
+                  └─ d5 = 75.05 ─▶ J5
+                       └─ d6 = 45.6 ─▶ J6 → efector
 ```
 
-Pose cero (q = 0): el brazo queda estirado hacia arriba; la FK da
-`(50.0, −63.4, 416.3) mm`, donde `x = d6` y `y = −d4` (coherente con el esquema).
+Pose cero (q = 0): el brazo queda estirado hacia arriba. Como los offsets
+colocan d6 sobre +x y d4 sobre −y, la FK da `(45.6, −63.4, 412.7) mm`.
+
+### 3.bis Origen del marco {0} y punto del efector medido
+
+- **Origen {0}**: centro del eje de J1, a nivel de la superficie de apoyo del
+  robot. z = 0 en esa superficie.
+- **Punto del efector medido**: centro geométrico de la brida de J6 — la cara
+  frontal donde se monta el efector. Es el **origen del marco {6}**, es decir,
+  la última columna de `T_0_6` que devuelve `fk(q)`.
+- **NO se mide la punta del gripper** ni ningún accesorio montado.
+- La pinza (a veces llamada "J7") no forma parte de la cadena DH ni de la
+  medición del ítem 1.
+- Procedimiento de medición sugerido: marcar con cinta o rotulador el centro
+  de la cara frontal de J6, y proyectar su posición sobre la mesa para leer
+  (x, y). La altura z se mide desde la superficie de apoyo.
 
 ## 4. Límites y espacio de trabajo usados por la admisión (Ítem 2)
 
 | Articulación | Mínimo [rad] | Máximo [rad] |
 |---|---:|---:|
-| J1 | −2.93 | 2.93 |
-| J2 | −2.36 | 2.36 |
-| J3 | −2.53 | 2.53 |
-| J4 | −2.58 | 2.58 |
-| J5 | −2.93 | 2.93 |
-| J6 | −3.14 | 3.14 |
+| J1 – J5 | −2.87979 (−165°) | +2.87979 (+165°) |
+| J6 | −3.05433 (−175°) | +3.05433 (+175°) |
 
-- Alcance: `80 mm ≤ ‖(x, y, z)‖ ≤ 480 mm` y `z ≥ 0`.
-- [ ] Contrastar estos límites con la documentación de Yahboom/pymycobot antes de usarlos como
-      criterio de rechazo.
+Fuente: límites publicados por Elephant Robotics para el myCobot 280.
 
-## 5. Predicciones (declarar ANTES de medir)
+- **Alcance geométrico máximo** de la cadena desde {0}:
+  d1 + |a2| + |a3| + d5 + d6 = 131.22 + 110.4 + 96 + 75.05 + 45.6 ≈ 458.3 mm.
+- **Límite de admisión usado**: `80 mm ≤ ‖(x, y, z)‖ ≤ 480 mm`, con `z ≥ 0`.
+  Medido desde {0}.
+- **Radio de trabajo nominal del fabricante**: 280 mm, medido **desde J2**
+  (no desde {0}). Describe la zona donde se garantizan ±0.5 mm de repetibilidad
+  y 250 g de carga útil. **No es un límite cinemático**: la propia pose cero
+  del robot (q = 0) está a ≈ 292 mm de J2 y a ≈ 420 mm de {0}, por encima de
+  280 mm, y sin embargo es una configuración normal y segura.
+- Por eso la admisión usa el alcance geométrico con margen (480 mm desde {0})
+  y no rechaza configuraciones alcanzables físicamente.
 
-Elegir **3 poses** cuya posición sea fácil de medir con regla o cinta (evitar la pose cero:
-el efector queda a >400 mm de altura). Predicción calculada con `fk.fk(q)`; poses candidatas
-de `herramientas/verificar_fk.py`:
+## 5. Predicciones (declaradas ANTES de medir)
+
+Calculadas con `fk.fk(q)` usando la tabla DH del manual oficial.
 
 | Pose | q [rad] | x_pred | y_pred | z_pred |
 |---|---|---:|---:|---:|
-| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | 96.6 | −39.4 | 402.8 |
-| `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | 102.2 | 11.0 | 407.6 |
-| `baja` | [0, −1.2, 1.2, 0, 0, 0] | 152.5 | −63.4 | 346.2 |
-| `cero` (referencia) | [0, 0, 0, 0, 0, 0] | 50.0 | −63.4 | 416.3 |
+| `cero` (referencia) | [0, 0, 0, 0, 0, 0] | 45.6 | −63.4 | 412.7 |
+| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | 92.9 | −41.5 | 399.2 |
+| `girada` (referencia, NO congelada) | [0.6, −0.4, 0.4, 0, 0.3, 0] | 99.6 | 7.7 | 404.0 |
+| `baja` | [0, −1.2, 1.2, 0, 0, 0] | 148.5 | −63.4 | 342.3 |
 
-Valores en mm. **Poses finales elegidas y congeladas:** `[ ]`, `[ ]`, `[ ]`
-(commit de congelación: `[hash]`).
+Valores en mm. **Poses finales elegidas y congeladas (3):** `cero`, `ready`, `baja`
+(commit de congelación: `[hash]` — fecha `[ ]` — firmado por `[ ]`).
 
 ## 6. Resultados de la medición (rellenar después)
 
 Los datos crudos van en `evidencias/medición_fk.csv`. Resumen:
 
-| Pose | Error de posición [mm] | ¿≤ 10 mm? |
-|---|---:|:-:|
-| `[ ]` | `[ ]` | `[ ]` |
-| `[ ]` | `[ ]` | `[ ]` |
-| `[ ]` | `[ ]` | `[ ]` |
+| Pose | x_med | y_med | z_med | Error [mm] | ¿≤ 10 mm? |
+|---|---:|---:|---:|---:|:-:|
+| `cero` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `ready` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
+| `baja` | `[ ]` | `[ ]` | `[ ]` | `[ ]` | `[ ]` |
 
-Análisis del error (si es grande y constante → offset de marco o de `d6`; si crece con la
-distancia → revisar los `a_i`): `[ ]`
+Análisis del error (si es grande y constante → offset de marco o de `d6`; si
+crece con la distancia → revisar los `a_i`): `[ ]`
 
 ## 7. Firma
 
@@ -138,5 +144,6 @@ Firmado antes de ejecutar las mediciones:
 
 ---
 
-*Este documento se completa luego con: diagrama de secuencia (Ítem 2) y la predicción del p95
-por política (Ítem 3), que forman parte del mismo «documento de diseño previo».*
+*Este documento se completa luego con: diagrama de secuencia (Ítem 2) y la
+predicción del p95 por política (Ítem 3), que forman parte del mismo
+«documento de diseño previo».*
