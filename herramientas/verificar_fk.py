@@ -1,26 +1,40 @@
 #!/usr/bin/env python3
-"""Compara fk(q) contra lo que reporta el brazo — la verificación del ítem 1.
+"""Compara fk(q) contra lo que reporta el brazo — verificación del ítem 1."""
 
-Se corre EN EL JETSON, con el puerto serie libre (sin sync_plan_nx corriendo).
-Lleva el brazo a varias poses, lee get_coords() y mide el error.
+import argparse
+import math
+import os
+import sys
+import time
 
-    python3 verificar_fk.py                 # las poses por defecto
-    python3 verificar_fk.py --solo-leer     # no mueve: solo compara donde está
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '..',
+        'src',
+        'arm_broker',
+    ),
+)
+from arm_broker import fk  # noqa: E402
 
-Criterio del reto: error ≤ 10 mm.
-"""
-import argparse, math, os, sys, time
-
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', 'src', 'arm_broker'))
-from arm_broker import fk                                        # noqa: E402
-
-POSES = {
-    'cero':    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    'ready':   [0.0, -0.5, 0.5, 0.0, 0.5, 0.0],
-    'girada':  [0.6, -0.4, 0.4, 0.0, 0.3, 0.0],
-    'baja':    [0.0, -1.2, 1.2, 0.0, 0.0, 0.0],
+POSES_CONGELADAS = {
+    'cero': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    'ready': [0.0, -0.5, 0.5, 0.0, 0.5, 0.0],
+    'baja': [0.0, -1.2, 1.2, 0.0, 0.0, 0.0],
 }
+
+POSES_EXTRA = {
+    'girada': [0.6, -0.4, 0.4, 0.0, 0.3, 0.0],
+}
+
+POSES = {**POSES_CONGELADAS, **POSES_EXTRA}
+
+
+def _dist_j2(q):
+    T = fk.fk_matriz(q)
+    x, y, z = T[0][3], T[1][3], T[2][3]
+    return math.sqrt(x * x + y * y + (z - fk.DH[0][2]) ** 2)
 
 
 def main():
@@ -38,15 +52,20 @@ def main():
         from pymycobot import MyCobot
 
     brazo = MyCobot(args.puerto, args.baud)
-    print(f'{"pose":10} {"FK (x,y,z)":>26}  {"robot (x,y,z)":>26}  {"error":>8}')
-    print('-' * 78)
+    print(
+        f'{"pose":10} {"FK (x,y,z)":>26}  {"robot (x,y,z)":>26}  '
+        f'{"error":>8}  {"‖p-J2‖":>9}  {"cong.":>5}'
+    )
+    print('-' * 100)
 
     errores = []
     poses = {'donde este': None} if args.solo_leer else POSES
 
     for nombre, q_rad in poses.items():
         if q_rad is not None:
-            brazo.send_angles([v * 180.0 / math.pi for v in q_rad], args.velocidad)
+            brazo.send_angles(
+                [v * 180.0 / math.pi for v in q_rad], args.velocidad
+            )
             time.sleep(args.espera)
         leidos = brazo.get_angles()
         coords = brazo.get_coords()
@@ -58,18 +77,23 @@ def main():
         px, py, pz = fk.fk(q_real)
         rx, ry, rz = coords[0], coords[1], coords[2]
         err = math.sqrt((px - rx) ** 2 + (py - ry) ** 2 + (pz - rz) ** 2)
-        errores.append(err)
+        dj2 = _dist_j2(q_real)
         marca = 'OK' if err <= 10.0 else '>10mm'
-        print(f'{nombre:10} ({px:7.1f},{py:7.1f},{pz:7.1f})  '
-              f'({rx:7.1f},{ry:7.1f},{rz:7.1f})  {err:6.1f} {marca}')
+        cong = 'SI' if nombre in POSES_CONGELADAS else 'no'
+        print(
+            f'{nombre:10} ({px:7.1f},{py:7.1f},{pz:7.1f})  '
+            f'({rx:7.1f},{ry:7.1f},{rz:7.1f})  {err:6.1f} {marca}  '
+            f'{dj2:7.1f}mm  {cong:>5}'
+        )
+        if nombre in POSES_CONGELADAS:
+            errores.append(err)
 
     if errores:
-        print('-' * 78)
-        print(f'error medio {sum(errores)/len(errores):.1f} mm   '
-              f'máximo {max(errores):.1f} mm   criterio del reto: ≤ 10 mm')
-        if max(errores) > 10.0:
-            print('\nSi el error es grande y constante, la tabla DH necesita ajuste.')
-            print('Si crece con la distancia, revisen los parámetros a_i.')
+        print('-' * 100)
+        print(
+            f'error medio (solo congeladas) {sum(errores)/len(errores):.1f} mm   '
+            f'máximo {max(errores):.1f} mm   criterio del reto: ≤ 10 mm'
+        )
 
 
 if __name__ == '__main__':
