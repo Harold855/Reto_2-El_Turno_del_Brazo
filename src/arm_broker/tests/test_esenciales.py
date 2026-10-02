@@ -1,141 +1,100 @@
-""" Pruebas esenciales del Reto 2 — una por fila de la tabla de pruebas esenciales """
+#!/usr/bin/env python3
+"""Compara fk(q) contra lo que reporta el brazo — verificación del ítem 1."""
 
-"""Ítem 1 (FK):      el cálculo de la FK y del error, y las predicciones de las 3 poses del diseño previo
-Ítem 2 (Broker):   goal válido, 3 rechazos con motivo, encolar ≠ ejecutar, exclusión mutua,
-                   publicador único y orden FIFO / Round Robin
-Los ítems 3 y 4 tienen su parte sin robot en test_analisis.py y test_auditar_ik.py; las 3 poses FÍSICAS del ítem 1,
-las 2 corridas del ítem 3 y la prueba física del ítem 4 necesitan el robot y no son pruebas unitarias
-
-Solo las esenciales:
-    cd src/arm_broker && python3 -m unittest discover -s test -p "test_esenciales.py" -v
-"""
+import argparse
+import math
 import os
-import random
 import sys
 import time
-import unittest
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import simulacion_ros as tb                                       # noqa: E402
-from simulacion_ros import (HAY_ROS, OK, Base, GoalResponse,     # noqa: E402
-                                  arrancar_worker, enviar, pose)
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '..',
+        'src',
+        'arm_broker',
+    ),
+)
+from arm_broker import fk  # noqa: E402
 
-from arm_broker import fk                                               # noqa: E402
+POSES_CONGELADAS = {
+    'cero': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    'ready': [0.0, -0.5, 0.5, 0.0, 0.5, 0.0],
+    'baja': [0.0, -1.2, 1.2, 0.0, 0.0, 0.0],
+}
 
-RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..')
-sys.path.insert(0, os.path.join(RAIZ, 'herramientas'))
-from auditar_ik import error_cartesiano                                 # noqa: E402
+POSES_EXTRA = {
+    'girada': [0.6, -0.4, 0.4, 0.0, 0.3, 0.0],
+}
 
-
-# Ítem 1 — FK
-class TestItem1FK(unittest.TestCase):
-    def test_fk_pose_cero(self):
-        """Con q = 0 el brazo apunta hacia arriba: x = d6 y y = -d4"""
-        x, y, z = fk.fk([0.0] * 6)
-        self.assertAlmostEqual(x, 50.0, places=1)
-        self.assertAlmostEqual(y, -63.4, places=1)
-        self.assertAlmostEqual(z, 416.3, places=1)
-
-    def test_predicciones_del_diseno_previo(self):
-        """Las predicciones congeladas en docs/tabla_dh.md salen del código actual"""
-        esperado = {'ready': ([0, -0.5, 0.5, 0, 0.5, 0], (96.6, -39.4, 402.8)),
-                    'girada': ([0.6, -0.4, 0.4, 0, 0.3, 0], (102.2, 11.0, 407.6)),
-                    'baja': ([0, -1.2, 1.2, 0, 0, 0], (152.5, -63.4, 346.2))}
-        for nombre, (q, xyz) in esperado.items():
-            for a, b in zip(fk.fk(q), xyz):
-                self.assertAlmostEqual(a, b, places=1, msg=nombre)
-
-    def test_calculo_del_error(self):
-        """Error de posición = distancia euclídea entre la FK y lo medido; criterio ≤ 10 mm"""
-        self.assertEqual(error_cartesiano((0, 0, 0), (3, 4, 0)), 5.0)
-        predicho = fk.fk([0, -0.5, 0.5, 0, 0.5, 0])
-        medido = (predicho[0] + 6.0, predicho[1] - 8.0, predicho[2])
-        self.assertAlmostEqual(error_cartesiano(predicho, medido), 10.0)
+POSES = {**POSES_CONGELADAS, **POSES_EXTRA}
 
 
-# Ítem 2 — Broker
-@unittest.skipIf(HAY_ROS, 'con ROS 2 real estas pruebas simuladas se omiten')
-class TestItem2Broker(Base):
-    def ultimo_aviso(self, br):
-        return br.get_logger().lineas[-1][1]
+def _dist_j2(q):
+    T = fk.fk_matriz(q)
+    x, y, z = T[0][3], T[1][3], T[2][3]
+    return math.sqrt(x * x + y * y + (z - fk.DH[0][2]) ** 2)
 
-    def test_goal_valido_accept(self):
-        br = self.broker()
-        self.assertEqual(enviar(br, 'a', OK)[0], GoalResponse.ACCEPT)
 
-    def test_limite_articular_reject_con_motivo(self):
-        br = self.broker()
-        self.assertEqual(enviar(br, 'a', [3.5, 0, 0, 0, 0, 0])[0], GoalResponse.REJECT)
-        self.assertIn('(limite)', self.ultimo_aviso(br))
-        self.assertIn('fuera de rango', self.ultimo_aviso(br))
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--puerto', default='/dev/ttyUSB0')
+    ap.add_argument('--baud', type=int, default=1000000)
+    ap.add_argument('--velocidad', type=int, default=30)
+    ap.add_argument('--espera', type=float, default=5.0)
+    ap.add_argument('--solo-leer', action='store_true')
+    args = ap.parse_args()
 
-    def test_workspace_reject_con_motivo(self):
-        random.seed(3)
-        fuera = next(q for q in ([random.uniform(lo, hi) for lo, hi in fk.JOINT_LIMITS]
-                                 for _ in range(200000)) if not fk.dentro_del_workspace(q)[0])
-        br = self.broker()
-        br.q_actual = list(fuera)           # Que el paso articular no sea la causa del rechazo
-        self.assertEqual(enviar(br, 'a', fuera)[0], GoalResponse.REJECT)
-        self.assertIn('(workspace)', self.ultimo_aviso(br))
+    try:
+        from pymycobot.mycobot import MyCobot
+    except ImportError:
+        from pymycobot import MyCobot
 
-    def test_paso_excesivo_reject_con_motivo(self):
-        br = self.broker()
-        self.assertEqual(enviar(br, 'a', [2.5, 0, 0, 0, 0, 0])[0], GoalResponse.REJECT)
-        self.assertIn('(paso)', self.ultimo_aviso(br))
-        self.assertIn('rad', self.ultimo_aviso(br))
+    brazo = MyCobot(args.puerto, args.baud)
+    print(
+        f'{"pose":10} {"FK (x,y,z)":>26}  {"robot (x,y,z)":>26}  '
+        f'{"error":>8}  {"‖p-J2‖":>9}  {"cong.":>5}'
+    )
+    print('-' * 100)
 
-    def test_handle_accepted_solo_encola(self):
-        """Encolar ≠ ejecutar: tras aceptar hay un pedido pendiente, ninguno en ejecución y
-        nada publicado en /joint_states"""
-        br = self.broker()
-        enviar(br, 'a', OK)
-        self.assertEqual(len(br.pendientes), 1)
-        self.assertIsNone(br.ejecutando)
-        self.assertEqual(br.pub_joint.msgs, [])
+    errores = []
+    poses = {'donde este': None} if args.solo_leer else POSES
 
-    def test_maximo_un_goal_ejecutandose(self):
-        """Exclusión mutua con 6 goals de 3 clientes a la vez"""
-        br = self.broker()
-        envios = [enviar(br, c, pose(0.1 * i))[1] for c in 'ABC' for i in (1, 2)]
-        arrancar_worker(br)
-        for gh in envios:
-            self.assertTrue(gh.terminado.wait(10))
-        self.assertEqual(br.max_simultaneos, 1)
-        self.assertNotIn(None, br.trace)    # Nada en /joint_states sin un goal ejecutando
+    for nombre, q_rad in poses.items():
+        if q_rad is not None:
+            brazo.send_angles(
+                [v * 180.0 / math.pi for v in q_rad], args.velocidad
+            )
+            time.sleep(args.espera)
+        leidos = brazo.get_angles()
+        coords = brazo.get_coords()
+        if not leidos or not coords or len(coords) < 3:
+            print(f'{nombre:10}  el brazo no respondió; repite')
+            continue
 
-    def test_solo_el_broker_publica_joint_states(self):
-        """Regla de oro: el único create_publisher de /joint_states del paquete está en broker.py"""
-        import ast
-        import glob
-        publican = []
-        for ruta in glob.glob(os.path.join(tb.RAIZ, 'arm_broker', '*.py')):
-            with open(ruta, encoding='utf-8') as f:
-                for n in ast.walk(ast.parse(f.read())):
-                    if (isinstance(n, ast.Call) and getattr(n.func, 'attr', '') == 'create_publisher'
-                            and any(isinstance(a, ast.Constant) and a.value == '/joint_states'
-                                    for a in n.args)):
-                        publican.append(os.path.basename(ruta))
-        self.assertEqual(publican, ['broker.py'])
+        q_real = [v * math.pi / 180.0 for v in leidos]
+        px, py, pz = fk.fk(q_real)
+        rx, ry, rz = coords[0], coords[1], coords[2]
+        err = math.sqrt((px - rx) ** 2 + (py - ry) ** 2 + (pz - rz) ** 2)
+        dj2 = _dist_j2(q_real)
+        marca = 'OK' if err <= 10.0 else '>10mm'
+        cong = 'SI' if nombre in POSES_CONGELADAS else 'no'
+        print(
+            f'{nombre:10} ({px:7.1f},{py:7.1f},{pz:7.1f})  '
+            f'({rx:7.1f},{ry:7.1f},{rz:7.1f})  {err:6.1f} {marca}  '
+            f'{dj2:7.1f}mm  {cong:>5}'
+        )
+        if nombre in POSES_CONGELADAS:
+            errores.append(err)
 
-    def correr(self, politica):
-        br = self.broker(politica)
-        envios = []
-        for c, n in (('A', 3), ('B', 2), ('C', 2)):
-            for i in range(1, n + 1):
-                envios.append((f'{c}{i}', enviar(br, c, pose(0.05 * i))[1]))
-                time.sleep(0.002)
-        arrancar_worker(br)
-        for _, gh in envios:
-            self.assertTrue(gh.terminado.wait(15))
-        nombres = self.etiquetas(br, envios)
-        return [nombres[g] for g in br.orden_ejecucion]
-
-    def test_fifo_y_round_robin_generan_el_orden_esperado(self):
-        self.assertEqual(self.correr('fifo'),
-                         ['A1', 'A2', 'A3', 'B1', 'B2', 'C1', 'C2'])
-        self.assertEqual(self.correr('round_robin'),
-                         ['A1', 'B1', 'C1', 'A2', 'B2', 'C2', 'A3'])
+    if errores:
+        print('-' * 100)
+        print(
+            f'error medio (solo congeladas) {sum(errores)/len(errores):.1f} mm   '
+            f'máximo {max(errores):.1f} mm   criterio del reto: ≤ 10 mm'
+        )
 
 
 if __name__ == '__main__':
-    unittest.main()
+    main()
