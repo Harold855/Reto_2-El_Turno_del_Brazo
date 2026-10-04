@@ -1,0 +1,21 @@
+ITEM 1 - PREDICCIONES FK CON LA TABLA DH DEL MANUAL OFICIAL (v. main), ANTES DE VOLVER A MEDIR
+
+Tabla DH: d1=131.22, a2=-110.4, a3=-96, d4=63.4, d5=75.05, d6=45.6
+(sustituye a la tabla anterior: d1=134.75, a2=-110, d5=75.55, d6=50)
+Calculadas con fk.fk(q); q comandado en rad.
+
+Pose: cero
+q [rad] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+FK predicha = (45.60, -63.40, 412.67) mm
+
+Pose: ready
+q [rad] = [0.0, -0.5, 0.5, 0.0, 0.5, 0.0]
+FK predicha = (92.95, -41.54, 399.16) mm
+
+Pose: girada
+q [rad] = [0.6, -0.4, 0.4, 0.0, 0.3, 0.0]
+FK predicha = (99.63, 7.67, 403.96) mm
+
+Pose adicional: baja
+q [rad] = [0.0, -1.2, 1.2, 0.0, 0.0, 0.0]
+FK predicha = (148.50, -63.40, 342.27) mm

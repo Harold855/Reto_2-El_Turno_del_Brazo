@@ -12,36 +12,39 @@
 
 Denavit-Hartenberg **estándar**: `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, con
 `θ_i = q_i + offset_i` y `T_0_6 = A1·A2·A3·A4·A5·A6`; la posición del efector es la última columna de
-`T_0_6`. Longitudes en mm, ángulos en rad dentro del código. Medidas de los eslabones tomadas del manual del JetCobot (Yahboom); los marcos y la tabla se
-dedujeron en pizarra con los vectores x, y, z (rotación y traslación) de cada articulación. Implementada en `src/arm_broker/arm_broker/fk.py`:
+`T_0_6`. Longitudes en mm, ángulos en rad dentro del código. Parámetros del **manual oficial** del
+myCobot 280 / JetCobot (Elephant Robotics, Yahboom), implementados en `src/arm_broker/arm_broker/fk.py`:
 
 | i | θ_i | d_i [mm] | a_i [mm] | α_i |
 |:-:|:---|---:|---:|---:|
-| 1 | q1 | 134.75 | 0 | +90° |
-| 2 | q2 − 90° | 0 | −110 | 0° |
+| 1 | q1 | 131.22 | 0 | +90° |
+| 2 | q2 − 90° | 0 | −110.4 | 0° |
 | 3 | q3 | 0 | −96 | 0° |
 | 4 | q4 − 90° | 63.4 | 0 | +90° |
-| 5 | q5 + 90° | 75.55 | 0 | −90° |
-| 6 | q6 | 50 | 0 | 0° |
+| 5 | q5 + 90° | 75.05 | 0 | −90° |
+| 6 | q6 | 45.6 | 0 | 0° |
 
-Detalle (marcos, límites articulares, workspace y puntos por confirmar) en [`tabla_dh.md`](tabla_dh.md).
+Se descartó la deducción previa en pizarra (d1 = 134.75, a2 = −110, d5 = 75.55, d6 = 50). Detalle (marcos,
+límites articulares, workspace y puntos por confirmar) en [`tabla_dh.md`](tabla_dh.md).
 
 ### 1.2 Predicción previa de las 3 poses
 
-Se declaró **antes de medir**, calculada con `fk.fk(q)` para el `q` comandado. Se probaron 4 poses y se
-usan las 3 primeras (`cero`, `ready`, `girada`):
+Calculada con `fk.fk(q)` para el `q` comandado, **antes de volver a medir** con la tabla vigente
+(`evidencias/item1/predicciones_dh_manual.txt`). Poses del ítem 1: `cero`, `ready` y `girada`.
 
 | Pose | q comandado [rad] | x_pred [mm] | y_pred [mm] | z_pred [mm] |
 |---|---|---:|---:|---:|
-| `cero` | [0, 0, 0, 0, 0, 0] | 50.00 | −63.40 | 416.30 |
-| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | 96.62 | −39.43 | 402.83 |
-| `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | 102.23 | 11.03 | 407.62 |
+| `cero` | [0, 0, 0, 0, 0, 0] | 45.60 | −63.40 | 412.67 |
+| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | 92.95 | −41.54 | 399.16 |
+| `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | 99.63 | 7.67 | 403.96 |
 
-Congelada en `evidencias/item1/predicciones_antes_de_medir.txt` (commit `a0cbc35`, 2026-09-30 20:10, hora
-de Lima), anterior a la validación en el robot (`84e9f1a`, 21:01). **Criterio de aceptación:** error de
-posición ≤ 10 mm en las tres poses. Procedimiento: se lee el `q` realmente adoptado (`get_angles()`), se
-calcula `FK(q_real)` y se compara con la posición que reporta el robot (`get_coords()`). Los resultados
-(5.8, 5.9 y 5.9 mm) están en `tabla_dh.md` §6 y en el README.
+**Criterio de aceptación:** error de posición ≤ 10 mm en las tres poses. Procedimiento: se lee el `q`
+realmente adoptado (`get_angles()`), se calcula `FK(q_real)` y se compara con `get_coords()`.
+
+**Estado de la medición.** Con la tabla anterior (pizarra) ya se midió: 5.8, 5.9 y 5.9 mm
+(`evidencias/item1/validacion_fk.txt`, predicción congelada en el commit `a0cbc35`). Esos valores no
+sirven para la tabla vigente; **falta repetir la medición** con `herramientas/verificar_fk.py` y anotarla en
+`tabla_dh.md` §6.1.
 
 ## 2. Diagrama de secuencia (ítem 2)
 
@@ -239,7 +242,7 @@ El equipo **no escribe un solver de cinemática inversa**: pide un objetivo cart
 `e = √((X_FK − X_obj)² + (Y_FK − Y_obj)² + (Z_FK − Z_obj)²)`, criterio **e ≤ 10 mm**.
 
 - **Predicción antes de medir.** Si el firmware llega al objetivo, `e` queda cerca del desfase conocido
-  de la FK frente a `get_coords()` (≈ 5.9 mm en el ítem 1, casi constante, ≈ +5.5 mm en z); un valor
+  de la FK frente a `get_coords()` (≈ 5.9 mm y casi constante con la tabla anterior; se actualiza al repetir el ítem 1); un valor
   mucho mayor indicaría un objetivo inalcanzable con esa orientación o un problema de marco.
 - **Objetivo.** Primera corrida: reproducir un punto que el firmware ya alcanzó (la pose `ready`,
   `get_coords()` ≈ (100.9, −40.5, 395.4) mm, con la orientación leída en el robot). Los valores finales

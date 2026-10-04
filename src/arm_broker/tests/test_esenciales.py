@@ -32,15 +32,15 @@ class TestItem1FK(unittest.TestCase):
     def test_fk_pose_cero(self):
         """Con q = 0 el brazo apunta hacia arriba: x = d6 y y = -d4"""
         x, y, z = fk.fk([0.0] * 6)
-        self.assertAlmostEqual(x, 50.0, places=1)
+        self.assertAlmostEqual(x, 45.6, places=1)
         self.assertAlmostEqual(y, -63.4, places=1)
-        self.assertAlmostEqual(z, 416.3, places=1)
+        self.assertAlmostEqual(z, 412.7, places=1)
 
     def test_predicciones_del_diseno_previo(self):
         """Las predicciones congeladas en docs/tabla_dh.md salen del código actual"""
-        esperado = {'ready': ([0, -0.5, 0.5, 0, 0.5, 0], (96.6, -39.4, 402.8)),
-                    'girada': ([0.6, -0.4, 0.4, 0, 0.3, 0], (102.2, 11.0, 407.6)),
-                    'baja': ([0, -1.2, 1.2, 0, 0, 0], (152.5, -63.4, 346.2))}
+        esperado = {'ready': ([0, -0.5, 0.5, 0, 0.5, 0], (92.9, -41.5, 399.2)),
+                    'girada': ([0.6, -0.4, 0.4, 0, 0.3, 0], (99.6, 7.7, 404.0)),
+                    'baja': ([0, -1.2, 1.2, 0, 0, 0], (148.5, -63.4, 342.3))}
         for nombre, (q, xyz) in esperado.items():
             for a, b in zip(fk.fk(q), xyz):
                 self.assertAlmostEqual(a, b, places=1, msg=nombre)

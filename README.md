@@ -36,7 +36,7 @@ Actualizar esta tabla a medida que se avanza. Todo lo que no necesita el robot e
 
 | Ítem | Contenido | Pts | Estado |
 |---|---|:-:|---|
-| 1 | Tabla DH + `fk(q)` + medición de 3 poses | 4 | **Hecho**: `fk.py`, tabla DH, predicción previa y validación en el robot; las 3 poses cumplen ≤ 10 mm (5.8, 5.9 y 5.9 mm) · evidencia en `evidencias/item1/` |
+| 1 | Tabla DH + `fk(q)` + medición de 3 poses | 4 | `fk.py` con la tabla DH del manual oficial (la de `main`) y predicciones nuevas · **falta repetir la validación en el robot** con esa tabla (la anterior dio 5.8 / 5.9 / 5.9 mm) · evidencia en `evidencias/item1/` |
 | 2 | Broker: cola, exclusión mutua, admisión con FK | 5 + 3 | `broker.py` y `politicas.py` implementados (admisión con rechazos con motivo, cupo atómico, worker único, cancelación, revalidación del paso) y probados con ROS simulado · **falta probarlo en el Jetson**, el diagrama de secuencia y el registro de rechazos real |
 | 3 | Medición FIFO vs. Round Robin, bag + CSV + figura | 4 | Protocolo, predicción, script de corrida (`experimento_item3.sh`) y análisis (`metricas.py`) listos y probados con datos simulados · **faltan el ensayo con ROS 2 y las corridas oficiales** |
 | 4 | Objetivo cartesiano (`send_coords`) auditado con la FK | 2 | `auditar_ik.py`, CSV de evidencia y documento listos y probados sin robot · **falta la sesión con el robot** |
@@ -44,7 +44,7 @@ Actualizar esta tabla a medida que se avanza. Todo lo que no necesita el robot e
 
 ### Pendiente con el robot
 
-- [ ] Dudas menores de la tabla DH (`d5` = 75.55 mm y `α4` a confirmar contra el manual) y, si el docente exige una medición independiente con regla, repetir las 3 poses (la validación actual es contra `get_coords()`).
+- [ ] Repetir `verificar_fk.py` con la tabla DH del manual y completar la medición del ítem 1 (y, si el docente exige una medición independiente con regla, medirla; la validación es contra `get_coords()`).
 - [ ] Ensayo con ROS 2 (`docs/ensayo_previo_ros2.md`): ~5 Hz en `/arm/queue_state`, un solo publicador de `/joint_states`, cola con varios goals, `ros2 bag`, exportación y análisis.
 - [ ] Recalcular la predicción con la traza oficial, congelarla y firmar el diseño previo.
 - [ ] Las dos corridas oficiales (`experimento_item3.sh fifo` y `round_robin`) y `resultados.md`.
@@ -195,41 +195,57 @@ ros2 topic echo /arm/queue_state
 
 ## Ítem 1 — Cinemática directa
 
-**Resultado: las tres poses cumplen el criterio de error ≤ 10 mm (5.8, 5.9 y 5.9 mm).**
+**Estado:** la tabla DH vigente es la del **manual oficial** (la de `main`). La validación en el robot
+(5.8, 5.9 y 5.9 mm, todas ≤ 10 mm) se hizo con la **tabla anterior** y queda como histórica: con la tabla
+nueva hay que **repetir la medición** (predicciones en `evidencias/item1/predicciones_dh_manual.txt`).
 
 ### Tabla DH
 
-Las medidas del robot se tomaron del manual del JetCobot (Yahboom); luego, en pizarra, el equipo calculó los vectores x, y, z (rotación y traslación) de cada articulación y los llevó a la tabla DH. DH estándar, `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, `θ_i = q_i + offset_i`,
-`T_0_6 = A1·…·A6`. Implementada en `fk.py`; justificación y marcos en
+Parámetros del **manual oficial** del myCobot 280 / JetCobot (Elephant Robotics, Yahboom), los mismos
+de `main`. DH estándar, `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, `θ_i = q_i + offset_i`,
+`T_0_6 = A1·…·A6`. Implementada en `fk.py`; marcos y justificación en
 [`docs/tabla_dh.md`](docs/tabla_dh.md) y [`docs/diseño_previo.md`](docs/diseño_previo.md).
 
 | i | θ_i | d_i [mm] | a_i [mm] | α_i |
 |:-:|:---|---:|---:|---:|
-| 1 | q1 | 134.75 | 0 | +90° |
-| 2 | q2 − 90° | 0 | −110 | 0° |
+| 1 | q1 | 131.22 | 0 | +90° |
+| 2 | q2 − 90° | 0 | −110.4 | 0° |
 | 3 | q3 | 0 | −96 | 0° |
 | 4 | q4 − 90° | 63.4 | 0 | +90° |
-| 5 | q5 + 90° | 75.55 | 0 | −90° |
-| 6 | q6 | 50 | 0 | 0° |
+| 5 | q5 + 90° | 75.05 | 0 | −90° |
+| 6 | q6 | 45.6 | 0 | 0° |
+
+Quedan descartados los valores de la deducción previa en pizarra (d1 = 134.75, a2 = −110, d5 = 75.55,
+d6 = 50). Límites articulares: J1–J5 ±165° (±2.87979 rad), J6 ±175° (±3.05433 rad).
 
 ### Poses, predicción previa, medición real y error
 
-Se probaron 4 poses; se usan **las 3 primeras** (`cero`, `ready`, `girada`). La predicción se declaró
-antes de medir (`evidencias/item1/predicciones_antes_de_medir.txt`, commit `a0cbc35`, anterior a la
-validación `84e9f1a`). La validación (`evidencias/item1/validacion_fk.txt`) lee el `q` que el brazo
-realmente adoptó (`get_angles()`), calcula `FK(q_real)` y lo compara con la posición que reporta el
-robot (`get_coords()`).
+Poses del ítem 1: `cero`, `ready` y `girada` (`baja` queda como pose adicional).
 
-| Pose | q comandado [rad] | Predicción previa [mm] | FK(q_real) [mm] | Robot, `get_coords()` [mm] | Error [mm] | ≤ 10 mm |
-|---|---|---|---|---|---:|:-:|
-| `cero` | [0, 0, 0, 0, 0, 0] | (50.00, −63.40, 416.30) | (55.9, −62.6, 414.6) | (54.4, −63.2, 409.1) | **5.8** | Sí |
-| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | (96.62, −39.43, 402.83) | (102.1, −38.6, 400.9) | (100.9, −40.5, 395.4) | **5.9** | Sí |
-| `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | (102.23, 11.03, 407.62) | (108.4, 14.6, 404.4) | (108.2, 11.9, 399.0) | **5.9** | Sí |
+**Predicción con la tabla vigente** (declarada antes de volver a medir, `evidencias/item1/predicciones_dh_manual.txt`):
 
-Error medio 5.9 mm, máximo 5.9 mm. **Conclusión: la FK propia cumple el criterio de ≤ 10 mm en las tres
-poses.** La cuarta pose probada (`baja`) dio 6.0 mm y no se cuenta.
+| Pose | q comandado [rad] | Predicción [mm] | Medición con esta tabla |
+|---|---|---|---|
+| `cero` | [0, 0, 0, 0, 0, 0] | (45.60, −63.40, 412.67) | pendiente |
+| `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | (92.95, −41.54, 399.16) | pendiente |
+| `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | (99.63, 7.67, 403.96) | pendiente |
 
-- El error es casi constante entre poses, sobre todo en z (`FK(q_real) − Robot` ≈ +5.5 mm), lo que es
+**Histórico, con la tabla anterior** (pizarra: d1 = 134.75, a2 = −110, d5 = 75.55, d6 = 50). La predicción se
+declaró antes de medir (`evidencias/item1/predicciones_antes_de_medir.txt`, commit `a0cbc35`, anterior a la
+validación `84e9f1a`); la validación (`evidencias/item1/validacion_fk.txt`) lee el `q` realmente adoptado
+(`get_angles()`), calcula `FK(q_real)` y lo compara con `get_coords()`.
+
+| Pose | Predicción previa [mm] | FK(q_real) [mm] | Robot, `get_coords()` [mm] | Error [mm] |
+|---|---|---|---|---:|
+| `cero` | (50.00, −63.40, 416.30) | (55.9, −62.6, 414.6) | (54.4, −63.2, 409.1) | 5.8 |
+| `ready` | (96.62, −39.43, 402.83) | (102.1, −38.6, 400.9) | (100.9, −40.5, 395.4) | 5.9 |
+| `girada` | (102.23, 11.03, 407.62) | (108.4, 14.6, 404.4) | (108.2, 11.9, 399.0) | 5.9 |
+
+Esos 5.8–5.9 mm **no valen para la tabla nueva**: la FK cambia unos 4–5 mm (por ejemplo en `cero`,
+(50.0, −63.4, 416.3) → (45.6, −63.4, 412.7)). Con la tabla nueva se repite `verificar_fk.py` y se
+completa la columna «Medición». La conclusión de ≤ 10 mm se reescribe con esos datos.
+
+- Sobre el histórico (tabla anterior): el error es casi constante entre poses, sobre todo en z (`FK(q_real) − Robot` ≈ +5.5 mm), lo que es
   compatible con un desfase de marco o de herramienta más que con un error en los `a_i`.
 - El brazo no llega exactamente al `q` comandado, por eso el error se mide con `q_real`. Si se
   comparara la predicción declarada contra el robot saldría 8.4, 8.6 y 10.5 mm (`girada` pasaría de
@@ -252,7 +268,7 @@ Rechazos con motivo, todos calculados con `fk.py`:
 
 | Causa | Función | Ejemplo de motivo |
 |---|---|---|
-| Límite articular | `fk.dentro_de_limites` | `2_Joint fuera de rango: 2.500 rad, límite [-2.36, 2.36]` |
+| Límite articular | `fk.dentro_de_limites` | `2_Joint fuera de rango: 3.000 rad, límite [-2.87979, 2.87979]` |
 | Workspace | `fk.dentro_del_workspace` | `efector a 512 mm de la base, máximo 480` |
 | Paso excesivo | `fk.paso_articular` | paso mayor que `paso_max_rad` |
 
