@@ -19,7 +19,7 @@ CRITERIO_MM = 10.0
 
 # 1. Poses de prueba
 # Todas las columnas estan en radianes (q1..q6). Las tres primeras son las del ítem 1;
-# 'baja' es adicional y no se cuenta (ver docs/tabla_dh.md, sección 5)
+# 'baja' se probó también pero no se cuenta (ver docs/tabla_dh.md, sección 6)
 POSES = {
     'cero':    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     'ready':   [0.0, -0.5, 0.5, 0.0, 0.5, 0.0],

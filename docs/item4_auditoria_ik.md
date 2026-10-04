@@ -8,7 +8,7 @@
 | Parte | Estado |
 |---|---|
 | `herramientas/auditar_ik.py` (`error_cartesiano`, `grados_a_radianes`, flujo completo) | Hecho y probado sin robot (4 pruebas en `tests/test_auditar_ik.py`) |
-| FK propia (`fk.py`, tabla DH del manual) | Hecha; su validación en el robot (ítem 1) se repite con esta tabla (con la anterior dio 5.8 / 5.9 / 5.9 mm) |
+| FK propia (`fk.py`) y su validación (ítem 1: 5.8 / 5.9 / 5.9 mm) | Hecho |
 | CSV de evidencia (encabezado de 24 columnas) | Hecho; sin filas hasta medir |
 | Objetivo seguro sobre el tablero, medición con el robot, tabla de la §4, explicación de la §6 | **Pendiente (requiere el robot)** |
 
@@ -76,7 +76,7 @@ los límites articulares. Procedimiento:
    dan `x, y, z` **y la orientación** `rx, ry, rz` a usar.
 2. Volver a una pose distinta (p. ej. `cero`) y pedir ese objetivo con `send_coords`.
 3. Comparar `FK(q_real)` con el objetivo. Si el firmware llegó, `e` debe rondar el desfase conocido de
-   la FK (≈ 6 mm con la tabla anterior; se actualiza con la nueva medición); un valor mucho mayor apunta a objetivo inalcanzable con esa orientación o a un
+   la FK (≈ 5.9 mm); un valor mucho mayor apunta a objetivo inalcanzable con esa orientación o a un
    problema de lectura, no a la tabla DH.
 
 Los valores finales se miden y se anotan en la sesión; los de arriba son una guía, no una medición.
@@ -106,8 +106,8 @@ Los valores finales se miden y se anotan en la sesión; los de arriba son una gu
 | `e` grande, y `FK(q_real)` difiere de `get_coords()` con una diferencia casi constante | Desfase de marco o de la tabla DH (p. ej. `d1`, `d5`, `d6` o el punto del efector), no un fallo de la IK |
 | `FK(q_real) ≈ objetivo` pero `get_coords()` difiere | `get_coords()` usa otro marco o herramienta que la FK |
 
-Referencia del ítem 1 (tabla anterior): la FK quedaba a unos 5.8-5.9 mm de `get_coords()` con un desfase casi
-constante (≈ +5.5 mm en z). Con la tabla del manual el desfase cambia y se conocerá al repetir el ítem 1; en el ítem 4 se espera que `dif_fk_robot_mm` ronde ese valor; si es mucho
+Referencia del ítem 1: la FK propia queda a unos 5.8-5.9 mm de `get_coords()` con un desfase casi constante
+(≈ +5.5 mm en z). Por eso en el ítem 4 se espera que `dif_fk_robot_mm` ronde esos ~6 mm; si es mucho
 mayor, hay un problema de marco o de lectura, no de la IK.
 
 ## 6. Pregunta abierta de la semana 5

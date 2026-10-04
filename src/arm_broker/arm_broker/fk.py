@@ -13,47 +13,44 @@ JOINT_NAMES = [
 ]
 
 # 2. Tabla Denavit-Hartenberg
-# Parámetros del manual oficial de Elephant Robotics / Yahboom para el myCobot 280 (JetCobot).
-# Sustituyen a la tabla previa deducida en pizarra (d1=134.75, a2=-110, d5=75.55, d6=50),
-# que quedó descartada (ver docs/tabla_dh.md)
+# Las medidas de los eslabones salen del manual del JetCobot (Yahboom); los marcos y los
+# parámetros se dedujeron en pizarra (ver docs/tabla_dh.md)
 
 # Tabla original:
 
 # i     theta         d [mm]    a [mm]    alpha
-# 1     q1            131.22       0       +90°
-# 2     q2 - 90°        0      -110.4       0°
+# 1     q1            134.75       0       +90°
+# 2     q2 - 90°        0       -110        0°
 # 3     q3              0        -96        0°
 # 4     q4 - 90°       63.4        0       +90°
-# 5     q5 + 90°      75.05        0       -90°
-# 6     q6            45.6         0        0°
+# 5     q5 + 90°      75.55        0       -90°
+# 6     q6             50          0        0°
 
 # Las columnas son guardadas en este orden: alpha, a, d, offset_theta
 DH = [
-    ( math.pi / 2,    0.0, 131.22,           0.0),   # J1
-    (         0.0, -110.4,   0.00, -math.pi / 2),    # J2
+    ( math.pi / 2,    0.0, 134.75,           0.0),   # J1
+    (         0.0, -110.0,   0.00, -math.pi / 2),    # J2
     (         0.0,  -96.0,   0.00,           0.0),   # J3
     ( math.pi / 2,    0.0,  63.40, -math.pi / 2),    # J4
-    (-math.pi / 2,    0.0,  75.05,  math.pi / 2),    # J5
-    (         0.0,    0.0,  45.60,           0.0),   # J6
+    (-math.pi / 2,    0.0,  75.55,  math.pi / 2),    # J5
+    (         0.0,    0.0,  50.00,           0.0),   # J6
 ]
 
-# 3. Límites articulares
-# Todas las columnas estan en radianes (J1-J5: ±165°, J6: ±175°, según el fabricante)
+# 3. Límites articulares 
+# Todas las columnas estan en radianes
 JOINT_LIMITS = [
-    (-2.87979, 2.87979),
-    (-2.87979, 2.87979),
-    (-2.87979, 2.87979),
-    (-2.87979, 2.87979),
-    (-2.87979, 2.87979),
-    (-3.05433, 3.05433),
+    (-2.93, 2.93),
+    (-2.36, 2.36),
+    (-2.53, 2.53),
+    (-2.58, 2.58),
+    (-2.93, 2.93),
+    (-3.14, 3.14),
 ]
 
 # 4. Límites simples del Workspace
-# Filtro geométrico simple utilizado por el broker (desde el origen {0}).
+# Filtro geométrico simple utilizado por el broker.
 ALCANCE_MIN_MM = 80.0
 ALCANCE_MAX_MM = 480.0
-# Radio de trabajo nominal del fabricante, medido desde J2: no es un límite cinemático
-RADIO_NOMINAL_MM = 280.0
 
 # 5. Matriz Homogénea DH Estándar
 def _t(alpha, a, d, theta):
