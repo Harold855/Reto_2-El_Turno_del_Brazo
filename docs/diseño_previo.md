@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Equipo 8 / `ROS_DOMAIN_ID` | `[ ]` / `[ ]` |
-| Integrantes | `H.L.P.E`, `J.D.R.N`, `R.S.E.R`,  |
+| Integrantes | `H.L.P.E`, `J.D.R.N`, `R.S.E.R` |
 | Firma y fecha | `[ ]` |
 
 ## 1. Tabla DH y predicción previa (ítem 1)
@@ -78,7 +78,7 @@ sequenceDiagram
     Note over A,C: /arm/queue_state a 5 Hz
 ```
 
-## 3. Medición bajo contención: FIFO frente a Round Robin(Item 3
+## 3. Medición bajo contención: FIFO frente a Round Robin (ítem 3)
 
 ### 3.1 Qué se quiere saber
 
@@ -230,6 +230,26 @@ mismo instante en segundos Unix, con relojes sincronizados por NTP) y los parám
 [`evidencias/item_3/resultados_plantilla.md`](../evidencias/item_3/resultados_plantilla.md): métricas predichas y
 medidas lado a lado, y contraste punto por punto con esta predicción.
 
-## 4. Cierre reflexivo
+## 4. Auditoría de la IK del firmware con la FK propia (ítem 4)
+
+El equipo **no escribe un solver de cinemática inversa**: pide un objetivo cartesiano con
+`send_coords()` y deja que el firmware resuelva la IK. Luego se lee el `q` que el brazo adoptó
+(`get_angles()`, grados → radianes), se aplica la FK propia y se compara con el objetivo pedido:
+
+`e = √((X_FK − X_obj)² + (Y_FK − Y_obj)² + (Z_FK − Z_obj)²)`, criterio **e ≤ 10 mm**.
+
+- **Predicción antes de medir.** Si el firmware llega al objetivo, `e` queda cerca del desfase conocido
+  de la FK frente a `get_coords()` (≈ 5.9 mm en el ítem 1, casi constante, ≈ +5.5 mm en z); un valor
+  mucho mayor indicaría un objetivo inalcanzable con esa orientación o un problema de marco.
+- **Objetivo.** Primera corrida: reproducir un punto que el firmware ya alcanzó (la pose `ready`,
+  `get_coords()` ≈ (100.9, −40.5, 395.4) mm, con la orientación leída en el robot). Los valores finales
+  se miden en la sesión.
+- **Herramienta y evidencia.** `herramientas/auditar_ik.py` (probada sin robot) y
+  `evidencias/item_4/auditoria_ik.csv`, que por ahora solo tiene el encabezado: las filas se agregan
+  con `--guardar` durante la sesión con el robot.
+- **Estado.** Herramienta, pruebas y documento listos; falta la sesión. Detalle en
+  [`item4_auditoria_ik.md`](item4_auditoria_ik.md).
+
+## 5. Cierre reflexivo
 
 Borrador en [`cierre_reflexivo.md`](cierre_reflexivo.md); los resultados se completan después de medir.

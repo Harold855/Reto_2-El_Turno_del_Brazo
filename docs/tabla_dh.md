@@ -1,7 +1,8 @@
 # Documento de diseño previo — Tabla DH del JetCobot (Ítem 1)
 
-> **Estado:** predicciones congeladas y validación del ítem 1 hecha (secciones 5 y 6). Quedan por
-> completar los campos `[ ... ]` y la firma.
+> **Estado:** predicciones congeladas y validación del ítem 1 hecha (secciones 5 y 6): las tres
+> poses cumplen ≤ 10 mm (5.8, 5.9 y 5.9 mm). Quedan por completar los campos `[ ... ]` y la firma.
+> La FK también sirve de instrumento en el ítem 4 (`docs/item4_auditoria_ik.md`).
 
 | Campo | Valor |
 |---|---|
@@ -69,10 +70,8 @@ DH = [
       que tabla, esquema de pizarra y código coinciden con el manual (una diferencia de 0.5 mm sería
       irrelevante frente al criterio de 10 mm, pero el documento debe ser consistente).
 - [ ] **α4 = +90°.** Sale del cálculo de rotación entre los marcos 3 y 4 en pizarra e implementado en `fk.py`; confirmar contra el esquema.
-- [ ] **Origen del marco {0}.** Definir con precisión el punto físico (eje de J1 a nivel de la
-      base) desde donde se mide con regla.
-- [ ] **Punto del efector.** Definir qué punto de la pinza/flange representa `T_0_6` (con
-      `d6 = 50 mm` la FK apunta a 50 mm del flange de J6 a lo largo de su eje) y medir a ese punto.
+- [ ] **Medición independiente (opcional).** La validación del ítem 1 es contra `get_coords()`; si el
+      docente pide una regla, medir el punto definido arriba en las tres poses.
 
 ## 3. Esquema de marcos (a completar con el dibujo)
 
@@ -90,6 +89,15 @@ limpio). Ayuda de lectura de la cadena, de la base al efector:
 
 Pose cero (q = 0): el brazo queda estirado hacia arriba; la FK da
 `(50.0, −63.4, 416.3) mm`, donde `x = d6` y `y = −d4` (coherente con el esquema).
+Comprobación a mano: `z = d1 + |a2| + |a3| + d5 = 134.75 + 110 + 96 + 75.55 = 416.3 mm`.
+
+### Origen y punto del efector
+
+- **Origen {0}:** centro del eje de J1 a nivel de la superficie de apoyo del robot; `z = 0` ahí.
+- **Punto medido:** el origen del marco {6}, es decir, la última columna de `T_0_6` que devuelve
+  `fk(q)`. No es la punta de la pinza ni de ningún accesorio.
+- Las posiciones que reporta el robot con `get_coords()` están en el marco del firmware, que puede
+  diferir en origen o herramienta: el desfase casi constante de la sección 6 es compatible con eso.
 
 ## 4. Límites y espacio de trabajo usados por la admisión (Ítem 2)
 
@@ -102,7 +110,8 @@ Pose cero (q = 0): el brazo queda estirado hacia arriba; la FK da
 | J5 | −2.93 | 2.93 |
 | J6 | −3.14 | 3.14 |
 
-- Alcance: `80 mm ≤ ‖(x, y, z)‖ ≤ 480 mm` y `z ≥ 0`.
+- Alcance: `80 mm ≤ ‖(x, y, z)‖ ≤ 480 mm` y `z ≥ 0`. El alcance geométrico máximo de la cadena es
+  `d1 + |a2| + |a3| + d5 + d6 = 134.75 + 110 + 96 + 75.55 + 50 ≈ 466 mm`, por lo que 480 mm deja margen.
 - [ ] Contrastar estos límites con la documentación de Yahboom/pymycobot antes de usarlos como
       criterio de rechazo.
 

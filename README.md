@@ -48,8 +48,8 @@ Actualizar esta tabla a medida que se avanza. Todo lo que no necesita el robot e
 - [ ] Ensayo con ROS 2 (`docs/ensayo_previo_ros2.md`): ~5 Hz en `/arm/queue_state`, un solo publicador de `/joint_states`, cola con varios goals, `ros2 bag`, exportación y análisis.
 - [ ] Recalcular la predicción con la traza oficial, congelarla y firmar el diseño previo.
 - [ ] Las dos corridas oficiales (`experimento_item3.sh fifo` y `round_robin`) y `resultados.md`.
-- [ ] La sesión del ítem 4 (`auditar_ik.py`) con un objetivo seguro medido sobre el tablero.
-- [ ] Diagrama de secuencia, video de 3 minutos y cierre reflexivo con resultados.
+- [ ] La sesión del ítem 4 (`auditar_ik.py`) con un objetivo seguro medido sobre el tablero; `evidencias/item_4/auditoria_ik.csv` solo tiene el encabezado hasta entonces (no se inventan filas). Guía: `docs/item4_auditoria_ik.md`.
+- [ ] Video de 3 minutos y cierre reflexivo con resultados.
 
 ## Autoría
 

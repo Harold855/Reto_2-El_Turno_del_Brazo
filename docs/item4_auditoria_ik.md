@@ -1,7 +1,16 @@
 # Ítem 4 — La FK como instrumento que audita una IK ajena
 
-> **Estado: preparado, falta la medición con el robot.** El equipo **no escribe un solver de
-> cinemática inversa**: la IK la resuelve el firmware con `send_coords()`.
+> **Estado: herramienta, pruebas y documento listos; falta la sesión con el robot.** El equipo **no
+> escribe un solver de cinemática inversa**: la IK la resuelve el firmware con `send_coords()`.
+> `evidencias/item_4/auditoria_ik.csv` contiene solo el encabezado: **no se inventan filas**; se llena
+> con `--guardar` durante la sesión (ver §7).
+
+| Parte | Estado |
+|---|---|
+| `herramientas/auditar_ik.py` (`error_cartesiano`, `grados_a_radianes`, flujo completo) | Hecho y probado sin robot (4 pruebas en `tests/test_auditar_ik.py`) |
+| FK propia (`fk.py`) y su validación (ítem 1: 5.8 / 5.9 / 5.9 mm) | Hecho |
+| CSV de evidencia (encabezado de 24 columnas) | Hecho; sin filas hasta medir |
+| Objetivo seguro sobre el tablero, medición con el robot, tabla de la §4, explicación de la §6 | **Pendiente (requiere el robot)** |
 
 ## 1. Qué se demuestra
 
@@ -57,6 +66,21 @@ x_obj,y_obj,z_obj, q1_deg…q6_deg, x_fk,y_fk,z_fk, x_robot,y_robot,z_robot, err
 rx_obj,ry_obj,rz_obj, velocidad, ex_mm,ey_mm,ez_mm, dif_fk_robot_mm
 ```
 
+### Objetivo recomendado para la primera corrida
+
+En vez de inventar un punto, conviene **reproducir uno que el firmware ya alcanzó** en el ítem 1: la
+pose `ready` quedó en `get_coords()` = (100.9, −40.5, 395.4) mm, dentro del espacio de trabajo y de
+los límites articulares. Procedimiento:
+
+1. Llevar el brazo a `ready` (`verificar_fk.py`) y leer `get_coords()` con `auditar_ik.py --solo-leer`:
+   dan `x, y, z` **y la orientación** `rx, ry, rz` a usar.
+2. Volver a una pose distinta (p. ej. `cero`) y pedir ese objetivo con `send_coords`.
+3. Comparar `FK(q_real)` con el objetivo. Si el firmware llegó, `e` debe rondar el desfase conocido de
+   la FK (≈ 5.9 mm); un valor mucho mayor apunta a objetivo inalcanzable con esa orientación o a un
+   problema de lectura, no a la tabla DH.
+
+Los valores finales se miden y se anotan en la sesión; los de arriba son una guía, no una medición.
+
 ## 4. Tabla de evidencia (la imprime el script; aquí, la plantilla)
 
 | Variable | Valor |
@@ -79,7 +103,7 @@ rx_obj,ry_obj,rz_obj, velocidad, ex_mm,ey_mm,ez_mm, dif_fk_robot_mm
 |---|---|
 | `e ≤ 10 mm` | El firmware llegó al objetivo y la FK propia lo confirma |
 | `e` grande, y `FK(q_real) ≈ get_coords()` | El firmware no alcanzó el objetivo (límites, objetivo inalcanzable con esa orientación) |
-| `e` grande, y `FK(q_real)` difiere de `get_coords()` con una diferencia casi constante | Desfase de marco o de la tabla DH (p. ej. `d5` 75.05 vs 75.55 mm, `d6`, el punto del efector), no un fallo de la IK |
+| `e` grande, y `FK(q_real)` difiere de `get_coords()` con una diferencia casi constante | Desfase de marco o de la tabla DH (p. ej. `d1`, `d5`, `d6` o el punto del efector), no un fallo de la IK |
 | `FK(q_real) ≈ objetivo` pero `get_coords()` difiere | `get_coords()` usa otro marco o herramienta que la FK |
 
 Referencia del ítem 1: la FK propia queda a unos 5.8-5.9 mm de `get_coords()` con un desfase casi constante
@@ -101,3 +125,6 @@ el fabricante; no se calcula la otra solución con un solver propio.
 - [ ] Puerto serie libre (sin otro programa conectado al brazo).
 - [ ] Correr con `--guardar` y conservar la tabla impresa (captura o log).
 - [ ] Completar la tabla de la sección 4 y la explicación de la sección 6.
+- [ ] Subir `evidencias/item_4/auditoria_ik.csv` con al menos una fila real y dejar la captura
+      de la tabla impresa junto al CSV.
+- [ ] Anotar en `docs/cierre_reflexivo.md` el error obtenido y la explicación de la §6.

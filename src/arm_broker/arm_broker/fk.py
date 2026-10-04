@@ -12,7 +12,9 @@ JOINT_NAMES = [
     '6_Joint',
 ]
 
-# 2. Tabla Denavit Hartengber
+# 2. Tabla Denavit-Hartenberg
+# Las medidas de los eslabones salen del manual del JetCobot (Yahboom); los marcos y los
+# parámetros se dedujeron en pizarra (ver docs/tabla_dh.md)
 
 # Tabla original:
 
@@ -45,14 +47,14 @@ JOINT_LIMITS = [
     (-3.14, 3.14),
 ]
 
-# 4. Límites simples dek Workspace
+# 4. Límites simples del Workspace
 # Filtro geométrico simple utilizado por el broker.
 ALCANCE_MIN_MM = 80.0
 ALCANCE_MAX_MM = 480.0
 
-# 5. Matriz Homogenea DH Estandar
+# 5. Matriz Homogénea DH Estándar
 def _t(alpha, a, d, theta):
-    """Se hace la construccion de la matriz A_i de una articulacion usando DH estandar, usando: A_i = Rot_z(theta) * Trans_z(d) * Trans_x(a) * Rot_x(alpha)"""
+    """Se construye la matriz A_i de una articulación con DH estándar: A_i = Rot_z(theta) * Trans_z(d) * Trans_x(a) * Rot_x(alpha)"""
     """Parametros: alpha -> giro entre z(i-1) y zi alrededor de xi en rad
                    a -> distancia entre ejes z sobre xi en mm
                    d -> desplazamiento sobre z(i-1) en mm
@@ -70,7 +72,7 @@ def _t(alpha, a, d, theta):
         [0.0,      0.0,      0.0,    1.0],
     ]
 
-# 6. Multiplicacion de Matrices 4x4
+# 6. Multiplicación de Matrices 4x4
 def _mul(A, B):
     """Se multiplican dos matrices 4x4"""
     """Esto se hace para no depender de NumPy dentro del paquete ROS 2 """
@@ -82,10 +84,10 @@ def _mul(A, B):
         for i in range(4)
     ]
 
-# 7. Cinematica Directa : Matriz Completa T_0_6
+# 7. Cinemática Directa: Matriz Completa T_0_6
 def fk_matriz(q):
-    """Se calcula la matriz homogenea T_0_6 desde la base hasta el efector"""
-    """q representa la lista o tupla de 6 angulos artculares en radianes"""
+    """Se calcula la matriz homogénea T_0_6 desde la base hasta el efector"""
+    """q representa la lista o tupla de 6 ángulos articulares en radianes"""
     """Se retorna la matriz homogenea 4x4"""
     """La operacion que se realiza es T_0_6 = A1 * A2 * A3 * A4 * A5 * A6"""
     if len(q) != 6:
@@ -109,7 +111,7 @@ def fk_matriz(q):
 
     return T
 
-# 8. Cinematica Directa: Solo la posicion XYZ
+# 8. Cinemática Directa: Solo la posición XYZ
 def fk(q):
     """Calcula la posición cartesiana (x,y,z) del efector final
     Entrada: q = q[q1,q2,q3,q4,q5,q6] en radianes rad
@@ -128,7 +130,7 @@ def fk(q):
 
     return x, y, z
 
-# 9.Validacion de limites articulares
+# 9. Validación de límites articulares
 def dentro_de_limites(q):
     """Se comprueba que las seis articulaciones estén dentro de sus límites"""
     if len(q) != 6:
@@ -144,7 +146,7 @@ def dentro_de_limites(q):
 
     return True, ''
 
-# 10. Validacion Simple del Workspace
+# 10. Validación Simple del Workspace
 def dentro_del_workspace(q):
     """Uso de filtro básico del workspace usando la posición calculada por FK."""
     """Se calcula r = sqrt(x²+y²+z²) y se rechaza si r > alcance_maximo o r < alcance_minimo o z < 0 """
@@ -166,7 +168,7 @@ def dentro_del_workspace(q):
 
     return True, ''
 
-# 11.Paso Articular Maximo
+# 11. Paso Articular Máximo
 def paso_articular(q_desde, q_hasta):
     """Calculo de la máxima variación articular entre dos configuraciones, en radianes."""
     if len(q_desde) != 6 or len(q_hasta) != 6:
