@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Equipo / `ROS_DOMAIN_ID` | 8 / 50 (42 + n° de grupo: 8) |
-| Integrantes | `` |
+| Integrantes | `Harold Lincoln Payco Espinoza, Jorge Daniel Rivera Nagaro, Rodrigo Sebastian Escobar Rosado` |
 
 ## 1. Tabla DH y predicción previa (ítem 1)
 
