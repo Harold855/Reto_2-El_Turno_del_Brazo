@@ -1,14 +1,9 @@
 # Documento de diseño previo — Reto 2 · El Turno del Brazo
 
-> **Estado: BORRADOR.** Las predicciones de este documento se congelan con un commit **anterior**
-> a las corridas oficiales del ítem 3 y no se editan después. Completar los campos `[ ... ]`.
-
 | Campo | Valor |
 |---|---|
-| Equipo n.º / `ROS_DOMAIN_ID` | `[ ]` / `[ ]` |
-| Integrantes | `[ ]`, `[ ]`, `[ ]`, `[ ]` |
-| Commit de congelación | `[hash]` |
-| Firma y fecha | `[ ]` |
+| Equipo / `ROS_DOMAIN_ID` | 8 / 50 (42 + n° de grupo: 8) |
+| Integrantes | `Harold Lincoln Payco Espinoza`, `Jorge Daniel Rivera Nagaro`, `Rodrigo Sebastian Escobar Rosado` |
 
 ## 1. Tabla DH y predicción previa (ítem 1)
 
@@ -17,7 +12,7 @@
 Denavit-Hartenberg **estándar**: `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, con
 `θ_i = q_i + offset_i` y `T_0_6 = A1·A2·A3·A4·A5·A6`; la posición del efector es la última columna de
 `T_0_6`. Longitudes en mm, ángulos en rad dentro del código. Medidas de los eslabones tomadas del manual del JetCobot (Yahboom); los marcos y la tabla se
-dedujeron en pizarra con los vectores x, y, z (rotación y traslación) de cada articulación. Implementada en `src/arm_broker/arm_broker/fk.py`:
+con los vectores x, y, z (rotación y traslación) de cada articulación. Implementada en `src/arm_broker/arm_broker/fk.py`:
 
 | i | θ_i | d_i [mm] | a_i [mm] | α_i |
 |:-:|:---|---:|---:|---:|
@@ -28,11 +23,11 @@ dedujeron en pizarra con los vectores x, y, z (rotación y traslación) de cada 
 | 5 | q5 + 90° | 75.55 | 0 | −90° |
 | 6 | q6 | 50 | 0 | 0° |
 
-Detalle (marcos, límites articulares, workspace y puntos por confirmar) en [`tabla_dh.md`](tabla_dh.md).
+Detalle (marcos, límites articulares, workspace y limitaciones) en [`tabla_dh.md`](tabla_dh.md).
 
 ### 1.2 Predicción previa de las 3 poses
 
-Se declaró **antes de medir**, calculada con `fk.fk(q)` para el `q` comandado. Se probaron 4 poses y se
+Estas se declararon antes de medir, calculada con `fk.fk(q)` para el `q` comandado. Se probaron 4 poses y se
 usan las 3 primeras (`cero`, `ready`, `girada`):
 
 | Pose | q comandado [rad] | x_pred [mm] | y_pred [mm] | z_pred [mm] |
@@ -82,9 +77,7 @@ sequenceDiagram
     Note over A,C: /arm/queue_state a 5 Hz
 ```
 
-*Mermaid se renderiza en GitHub; el PDF muestra el código porque no se pudo generar la imagen.*
-
-## 3. Ítem 3 — Medición bajo contención: FIFO frente a Round Robin
+## 3. Medición bajo contención: FIFO frente a Round Robin (ítem 3)
 
 ### 3.1 Qué se quiere saber
 
@@ -128,8 +121,8 @@ Comprobación con `n = 10`, `T = 3.05`: FIFO, cliente 0 → media 13.7 s y p95 2
 
 **Valores para el caso de referencia**: 4 clientes × 10 poses × 1 repetición (`N = 40`), `T = 3.05 s`,
 arranque escalonado A→D, prioridades A=1, B=2, C=3, D=4. Salen de
-`python3 herramientas/simular_politicas.py --poses 10`. **Se vuelven a calcular con el número real
-de poses de la traza oficial antes de congelar este documento.**
+`python3 herramientas/simular_politicas.py --poses 10`. **Con la traza oficial se hubieran recalculado
+con su número real de poses antes de congelar este documento.**
 
 | Métrica | FIFO | Round Robin |
 |---|---|---|
@@ -144,23 +137,23 @@ de poses de la traza oficial antes de congelar este documento.**
 | Equidad de Jain a mitad de corrida | 0.500 (A:10, B:10, C:0, D:0) | 1.000 (5 c/u) |
 | Goals rechazados | 0 | 0 |
 
-**Resumen de la predicción en una frase.** FIFO y Round Robin tendrán la misma espera media y
+**Resumen de esta prediccion** FIFO y Round Robin tendrán la misma espera media y
 un p95 global casi igual (≈ 111–112 s con la traza de referencia); FIFO dará esperas muy
 desiguales según el orden de llegada (prioridad 1: p95 ≈ 27 s, prioridad 4: ≈ 117 s) mientras
 Round Robin las igualará (≈ 110–117 s para todas); en la mitad de la corrida Jain será ≈ 0.5 con
 FIFO y ≈ 1.0 con Round Robin; y el índice de inanición será **peor** en Round Robin (≈ 110 s frente
 a ≈ 27 s) porque en este orden de llegada el cliente de menor prioridad (A) es el primero en FIFO.
 
-**Cómo se contrastará.** La medición tiene resolución de 0.2 s (`/arm/queue_state` a 5 Hz) y no ve
+**¿Cómo se contrasta?** La medición tiene resolución de 0.2 s (`/arm/queue_state` a 5 Hz) y no ve
 los goals que empiezan a ejecutarse antes de la siguiente publicación, así que se aceptan
-diferencias de unos pocos segundos. Una desviación mayor se explica en el cierre reflexivo.
+diferencias de unos pocos segundos.
 
-### 3.3 Protocolo experimental
+### 3.3 Protocolo
 
 | Elemento | Valor |
 |---|---|
-| Traza | Oficial del docente, mismo CSV en ambas corridas (`sha256` en `protocolo.txt`). Para ensayos: `trazas/prueba.csv` |
-| Número de clientes | 4, en la misma máquina o en cuatro Raspberry, con nodos `cliente_A` … `cliente_D` |
+| Traza | Se uso para ensayos: `trazas/prueba.csv` |
+| Número de clientes | 4, en la misma máquina o en cuatro Raspberry Pi 400, con nodos `cliente_A` … `cliente_D` |
 | Prioridad por cliente | A=1, B=2, C=3, D=4 |
 | Repeticiones | `[1]` (igual en ambas corridas) |
 | Modo | `asincrono` |
@@ -174,8 +167,6 @@ diferencias de unos pocos segundos. Una desviación mayor se explica en el cierr
 
 Variables que se controlan: traza, clientes, prioridades, repeticiones, pausa, modo, duración,
 interpolación, orden de inicio, tópicos y `ROS_DOMAIN_ID`. Variable que cambia: la política.
-
-Amenazas a la validez y cómo se atienden:
 
 | Amenaza | Medida |
 |---|---|
@@ -210,7 +201,7 @@ Corrida oficial (una por política; el script deja todo en `evidencias/item_3/<p
 
 ```bash
 source /opt/ros/humble/setup.bash && source install/setup.bash
-export ROS_DOMAIN_ID=<42 + n.º de equipo>
+export ROS_DOMAIN_ID=<42 + 8>
 
 TRAZA=/ruta/traza_oficial.csv bash herramientas/experimento_item3.sh fifo
 TRAZA=/ruta/traza_oficial.csv bash herramientas/experimento_item3.sh round_robin
@@ -219,9 +210,6 @@ python3 analisis/metricas.py evidencias/item_3/fifo/queue_state.csv \
     evidencias/item_3/round_robin/queue_state.csv \
     --salida evidencias/item_3/comparacion_politicas.png
 ```
-
-Si los clientes corren en Raspberry distintas, se lanzan a mano con el mismo `inicio_unix` (un
-mismo instante en segundos Unix, con relojes sincronizados por NTP) y los parámetros de la tabla 3.3.
 
 ### 3.6 Criterios de una corrida válida
 
@@ -236,6 +224,26 @@ mismo instante en segundos Unix, con relojes sincronizados por NTP) y los parám
 [`evidencias/item_3/resultados_plantilla.md`](../evidencias/item_3/resultados_plantilla.md): métricas predichas y
 medidas lado a lado, y contraste punto por punto con esta predicción.
 
-## 4. Cierre reflexivo
+## 4. Auditoría de la IK del firmware con la FK propia (ítem 4)
 
-Borrador en [`cierre_reflexivo.md`](cierre_reflexivo.md); los resultados se completan después de medir.
+E**No escribimos un solver de cinemática inversa**, si no pedimos un objetivo cartesiano con
+`send_coords()` y deja que el firmware resuelva la IK. Luego se lee el `q` que el brazo adoptó
+(`get_angles()`, grados → radianes), se aplica la FK propia y se compara con el objetivo pedido:
+
+`e = √((X_FK − X_obj)² + (Y_FK − Y_obj)² + (Z_FK − Z_obj)²)`, criterio **e ≤ 10 mm**.
+
+- **Predicción antes de medir.** Si el firmware llega al objetivo, `e` queda cerca del desfase conocido
+  de la FK frente a `get_coords()` (≈ 5.9 mm en el ítem 1, casi constante, ≈ +5.5 mm en z); un valor
+  mucho mayor indicaría un objetivo inalcanzable con esa orientación o un problema de marco.
+- **Objetivo.** Primera corrida: reproducir un punto que el firmware ya alcanzó (la pose `ready`,
+  `get_coords()` ≈ (100.9, −40.5, 395.4) mm, con la orientación leída en el robot). Los valores finales
+  se miden en la sesión.
+- **Herramienta y evidencia.** `herramientas/auditar_ik.py` (probada sin robot) y
+  `evidencias/item_4/auditoria_ik.csv`, que por ahora solo tiene el encabezado: las filas se agregan
+  con `--guardar` durante la sesión con el robot.
+- **Estado.** Herramienta, pruebas y documento completados; la sesión con el brazo no se realizó y se describe como se hubiera hecho. Detalle en
+  [`item4_auditoria_ik.md`](item4_auditoria_ik.md).
+
+## 5. Cierre reflexivo
+
+Ver [`cierre_reflexivo.md`](cierre_reflexivo.md): la decisión se razona con la predicción, porque no se lograron realizar las pruebas oficiales.
