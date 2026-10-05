@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
-""" Predicción de las métricas del ítem 3 con un modelo de cola — ANTES de medir """
+""" Predicción de las métricas del ítem 3 con un modelo de cola """
 
-"""Se simula un brazo que atiende de a un goal, con tiempo de servicio fijo, usando las MISMAS
-clases FIFO y RoundRobin del broker. No mueve nada ni usa ROS 2: sirve para declarar la
-predicción del documento de diseño previo antes de tener datos reales"""
+""" Descripcion: Se simula un brazo que atiende de a un goal, con tiempo de servicio fijo, usando las MISMAS
+clases FIFO y RoundRobin del broker"""
 
 """Uso:
     python3 simular_politicas.py --poses 10 --repeticiones 1 --servicio 3.05
     python3 simular_politicas.py --poses 10 --patron simultaneo
 
-    --clientes   nombre:prioridad, separados por coma (por defecto A:1,B:2,C:3,D:4)
-    --poses      poses de la traza (cada cliente envía poses x repeticiones goals)
-    --servicio   segundos que el brazo tarda por goal (~ duracion_movimiento_s)
-    --patron     escalonado (cada cliente arranca `--escalon` s después del anterior y envía
-                 todo de golpe) | simultaneo (todos arrancan a la vez y los goals se intercalan)"""
+    -- clientes -> nombre:prioridad, separados por coma (por defecto A:1,B:2,C:3,D:4)
+    -- poses  ->   poses de la traza (cada cliente envía poses x repeticiones goals)
+    -- servicio -> segundos que el brazo tarda por goal (~ duracion_movimiento_s)
+    -- patron  ->  escalonado (cada cliente arranca en `--escalon` después del anterior y envía todo de golpe)  
+                   simultaneo (todos arrancan a la vez y los goals se intercalan)"""
 
 """Limitaciones del modelo: el servicio es constante, no hay rechazos ni cancelaciones, y las
-esperas son las verdaderas; la medición real (5 Hz) las ve con ~0.2 s de resolución"""
+esperas son las verdaderas, la medición real (5 Hz) las ve con ~0.2 s de resolución"""
 
 import argparse
 import os
