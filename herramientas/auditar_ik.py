@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-""" Auditoría de la cinemática inversa del firmware con la FK propia — Ítem 4 del Reto 2 """
+""" Auditoría de la cinemática inversa del firmware con FK propia — Ítem 4 del Reto 2 """
 
-"""La cinemática inversa la resuelve el firmware (send_coords); el equipo NO escribe solver
-Este script la audita: pide un objetivo cartesiano, lee el q que el brazo realmente adoptó,
+"""La cinemática inversa la resuelve el firmware (send_coords).
+Este script audita de la siguente manera: 
+Primero pide un objetivo cartesiano, lee el q que el brazo realmente adoptó,
 le aplica la FK propia (fk.py) y mide el error contra lo solicitado:
 
-    objetivo (x, y, z) -> send_coords() -> el firmware resuelve la IK -> el brazo adopta q
+    objetivo (x, y, z) -> send_coords() -> el firmware resuelve la IK -> el brazo adopta a "q"
         -> get_angles() [°] -> q [rad] -> fk.fk(q) -> error = |FK(q) - objetivo|
 
 La evidencia principal es FK(q_real) frente al objetivo. get_coords() se guarda solo como dato
-de apoyo: si FK(q_real) y get_coords() coinciden pero ambos están lejos del objetivo, el firmware
-no llegó; si FK(q_real) y get_coords() difieren de forma constante, hay un desfase de marco o de
-la tabla DH (ver docs/item4_auditoria_ik.md)"""
+de apoyo, ya que si FK(q_real) y get_coords() coinciden pero ambos están lejos del objetivo, el firmware
+no llegó, pero si FK(q_real) y get_coords() difieren de forma constante, hay un desfase de marco o de
+la tabla DH (se puede ver en docs/item4_auditoria_ik.md)"""
 
 """Uso (en el Jetson, con el puerto serie libre y el espacio despejado alrededor del brazo):
 
@@ -38,7 +39,7 @@ PUERTO = '/dev/ttyUSB0'
 BAUD = 1000000
 VELOCIDAD = 30          # 0..100 en pymycobot; baja a propósito
 ESPERA_S = 5.0          # Segundos de espera a que termine el movimiento
-RUTA_CSV = os.path.join(RAIZ, 'evidencias', 'item4', 'auditoria_ik.csv')
+RUTA_CSV = os.path.join(RAIZ, 'evidencias', 'item_4', 'auditoria_ik.csv')
 
 # Las primeras 16 columnas son las acordadas; el resto es información de apoyo
 COLUMNAS = [
