@@ -1,5 +1,4 @@
-""" Broker de acceso exclusivo al JetCobot — Ítem 2 del Reto 2 """
-
+""" Broker de acceso exclusivo al JetCobot creado para el item 2 """
 
 import csv
 import math
@@ -31,11 +30,11 @@ class ArmBroker(Node):
         super().__init__('arm_broker')
 
         # Parámetros de ROS 2: se pasan con --ros-args -p nombre:=valor
-        self.declare_parameter('politica', 'fifo')                # fifo | round_robin
-        self.declare_parameter('cola_max', 20)                    # Pedidos pendientes admitidos
-        self.declare_parameter('paso_max_rad', 1.2)               # Salto articular máximo por movimiento
-        self.declare_parameter('duracion_movimiento_s', 3.0)      # Duración de cada movimiento
-        self.declare_parameter('pasos_interpolacion', 10)         # Mensajes /joint_states por movimiento
+        self.declare_parameter('politica', 'fifo')                  # Fifo o Round Robin
+        self.declare_parameter('cola_max', 20)                      # Pedidos pendientes admitidos
+        self.declare_parameter('paso_max_rad', 1.2)                 # Salto articular máximo por movimiento
+        self.declare_parameter('duracion_movimiento_s', 3.0)        # Duración de cada movimiento
+        self.declare_parameter('pasos_interpolacion', 10)           # Mensajes /joint_states por movimiento
         self.declare_parameter('archivo_rechazos', 'rechazos.csv')  # Vacío desactiva el registro
 
         # Se elige la política de cola según el parámetro
@@ -88,7 +87,7 @@ class ArmBroker(Node):
         self.create_timer(0.2, self.publicar_estado_cola,
                           callback_group=self.grupo_estado)
 
-        # El worker es el único que saca pedidos de la cola y los manda a ejecutar: es un
+        # El worker es el único que saca pedidos de la cola y los manda a ejecutar, este es un
         # callback periódico del grupo MutuallyExclusive, así que dos vueltas nunca se solapan
         self.create_timer(0.02, self._worker, callback_group=self.grupo_worker)
 
@@ -96,7 +95,7 @@ class ArmBroker(Node):
             f'arm_broker listo · política={self.politica.nombre} · '
             f'cola_max={self.cola_max} · único publicador de /joint_states')
 
-    # 2. Admisión de goals
+# 2. Admisión de goals
     def goal_callback(self, goal_request):
         """Se decide si un goal entra: barata e inmediata, acepta o rechaza y nunca ejecuta"""
         """Se rechaza con motivo explícito si el objetivo está fuera de límites articulares,
@@ -128,7 +127,7 @@ class ArmBroker(Node):
         self._registrar_rechazo(goal_request, causa, motivo)
         return GoalResponse.REJECT
 
-    # 3. Validación del objetivo con la FK
+# 3. Validación del objetivo con la FK
     def _validar(self, q):
         """Se comprueba que el objetivo q sea admisible: límites, workspace y paso articular"""
         """No se mira el cupo de la cola: eso se decide (y se reserva) en goal_callback"""
@@ -160,7 +159,7 @@ class ArmBroker(Node):
 
         return None, ''
 
-    # 4. Registro de rechazos
+# 4. Registro de rechazos
     def _registrar_rechazo(self, goal_request, causa, motivo):
         """Se agrega el rechazo a un CSV: evidencia del ítem 2 (todo rechazo lleva motivo)"""
         """Columnas: t_unix, client_id, priority, causa, motivo, joint_positions"""
@@ -181,7 +180,7 @@ class ArmBroker(Node):
         except OSError as e:
             self.get_logger().error(f'no pude escribir {self.archivo_rechazos}: {e}')
 
-    # 5. Encolado
+# 5. Encolado
     def handle_accepted_callback(self, goal_handle):
         """Se encola el goal aceptado: AQUÍ NO SE EJECUTA NADA ni se publica en /joint_states"""
         """Se crea el Pedido y se deja en self.pendientes (e indexado por goal_id) bajo self.lock"""
@@ -195,7 +194,7 @@ class ArmBroker(Node):
         self.get_logger().info(
             f'ENCOLADO {pedido!r} · pendientes={len(self.pendientes)}')
 
-    # 6. Worker único
+# 6. Worker único
     def _worker(self):
         """Se desencola y ejecuta de a un pedido: es el único que decide a quién le toca"""
         """Es un callback periódico de grupo_worker (MutuallyExclusive): cada vuelta atiende un
@@ -231,7 +230,7 @@ class ArmBroker(Node):
                     self.n_completados += 1
             self.politica.atendido(pedido)
 
-    # 7. Descarte de pedidos cancelados
+# 7. Descarte de pedidos cancelados
     def _purgar_cancelados(self):
         """Se sacan de la cola los pedidos cancelados mientras esperaban; no mueven el brazo"""
         """Cada uno pasa por _atender: execute_callback lo cierra como cancelado y devuelve su
@@ -250,7 +249,7 @@ class ArmBroker(Node):
                 with self.lock:
                     self.por_goal_id.pop(p.goal_id, None)
 
-    # 8. Atención de un pedido
+# 8. Atención de un pedido
     def _atender(self, pedido):
         """Se lanza un pedido y se espera a que termine; solo lo llama el worker"""
         goal_handle = pedido.goal_handle
@@ -291,7 +290,7 @@ class ArmBroker(Node):
         finally:
             pedido.fin.set()
 
-    # 9. Ejecución con interpolación
+# 9. Ejecución con interpolación
     def execute_callback(self, goal_handle):
         """Se ejecuta UN pedido; lo llama el worker (vía goal_handle.execute()), nunca handle_accepted"""
         """Se interpola desde self.q_actual hasta el destino en self.pasos pasos, publicando con
@@ -399,12 +398,12 @@ class ArmBroker(Node):
             pedido.resultado = resultado
             pedido.fin.set()   # Si no, el worker se queda esperando para siempre
 
-    # 10. Cancelación
+# 10. Cancelación
     def cancel_callback(self, goal_handle):
         """Se acepta toda cancelación; el worker la atiende al descartar o entre pasos"""
         return CancelResponse.ACCEPT
 
-    # 11. Publicación en /joint_states
+# 11. Publicación en /joint_states
     def mover(self, q):
         """Se publica la pose q en /joint_states: solo lo llama execute_callback"""
         """Entrada: q = [q1,q2,q3,q4,q5,q6] en radianes rad"""
@@ -417,7 +416,7 @@ class ArmBroker(Node):
         with self.lock:
             self.q_actual = list(q)
 
-    # 12. Estado de la cola a 5 Hz
+# 12. Estado de la cola a 5 Hz
     def publicar_estado_cola(self):
         """Se publica /arm/queue_state (lo llama un timer de 0.2 s), visible para todos los clientes"""
         """A cada goal en cola se le manda además su feedback QUEUED con su posición"""
@@ -450,14 +449,14 @@ class ArmBroker(Node):
             except Exception:
                 pass
 
-    # 13. Cierre del nodo
+# 13. Cierre del nodo
     def destroy_node(self):
         """Se avisa al worker y al execute_callback que deben terminar"""
         self._parar.set()
         return super().destroy_node()
 
 
-# 14. Punto de entrada
+# 14. Programa Principal
 def main(args=None):
     """Se inicia ROS 2 y se hace girar el broker con un executor multihilo"""
     """Multihilo hace falta para aceptar goals mientras otro se ejecuta"""
