@@ -32,24 +32,23 @@ Flujo inicial en ASCII (equivalente):
 ## Estado del proyecto
 
 Estado de entrega. Todo lo que no necesita el robot está hecho y probado (19 pruebas automáticas, sin
-ROS 2). Las sesiones con el Jetson y el brazo se describen como se hubieran realizado, sin inventar
-mediciones: donde no hay dato real, el documento lo dice.
+ROS 2). Lo que dependía del Jetson y del brazo **faltó por desarrollar**.
 
 | Ítem | Contenido | Pts | Estado |
 |---|---|:-:|---|
 | 1 | Tabla DH + `fk(q)` + medición de 3 poses | 4 | **Completado**: `fk.py`, tabla DH, predicción previa y validación en el robot; las 3 poses cumplen ≤ 10 mm (5.8, 5.9 y 5.9 mm) · evidencia en `evidencias/item1/` |
-| 2 | Broker: cola, exclusión mutua, admisión con FK | 5 + 3 | **Completado** y probado con ROS simulado: `broker.py` y `politicas.py` (rechazos con motivo, cupo atómico, worker único, cancelación, revalidación del paso) y diagrama de secuencia en `docs/diseño_previo.md`. No se probó en el Jetson |
-| 3 | Medición FIFO vs. Round Robin, bag + CSV + figura | 4 | **Completado sin corridas oficiales**: protocolo, predicción, `experimento_item3.sh` y `metricas.py` probados con datos simulados. Las corridas con el robot se hubieran hecho con la traza oficial |
-| 4 | Objetivo cartesiano (`send_coords`) auditado con la FK | 2 | **Completado sin probar en el brazo**: `auditar_ik.py`, CSV de evidencia (solo encabezado) y `docs/item4_auditoria_ik.md` |
-| — | Diseño previo y cierre reflexivo | 2 | **Completado**: `docs/diseño_previo.*` y `docs/cierre_reflexivo.*`; el cierre argumenta con la predicción porque no hay corridas oficiales |
+| 2 | Broker: cola, exclusión mutua, admisión con FK | 5 + 3 | **Completado**: `broker.py` y `politicas.py` (rechazos con motivo, cupo atómico, worker único, cancelación, revalidación del paso) y diagrama de secuencia en `docs/diseño_previo.md` |
+| 3 | Medición FIFO vs. Round Robin, bag + CSV + figura | 4 | Protocolo, predicción, `experimento_item3.sh` y `metricas.py` completados · **faltó por desarrollar** las corridas oficiales |
+| 4 | Objetivo cartesiano (`send_coords`) auditado con la FK | 2 | `auditar_ik.py`, CSV de evidencia (solo encabezado) y `docs/item4_auditoria_ik.md` completados · **faltó por desarrollar** la sesión con el brazo |
+| — | Diseño previo y cierre reflexivo | 2 | **Completado**: `docs/diseño_previo.md` y `docs/cierre_reflexivo.md` |
 
-### Lo que se hubiera hecho con el robot
+### Faltó por desarrollar
 
-- Un ensayo con ROS 2 (`docs/ensayo_previo_ros2.md`) para comprobar ~5 Hz en `/arm/queue_state`, un solo publicador de `/joint_states` y cola con varios goals.
-- Las dos corridas oficiales (`experimento_item3.sh fifo` y `round_robin`) con la traza del docente, el bag y `resultados.md`.
-- La sesión del ítem 4 (`auditar_ik.py`) con un objetivo seguro medido sobre el tablero.
-- Una medición independiente con regla de las 3 poses del ítem 1 (la validación actual es contra `get_coords()`).
-- El video de 3 minutos con los cuatro clientes en disputa.
+- El ensayo con ROS 2 (`docs/ensayo_previo_ros2.md`) y la prueba del broker y los clientes en el Jetson.
+- Las dos corridas oficiales (`experimento_item3.sh fifo` y `round_robin`), el bag, el CSV y la figura comparativa.
+- La sesión del ítem 4 con el brazo (`auditar_ik.py`).
+- La medición independiente con regla de las 3 poses del ítem 1.
+- El video de 3 minutos.
 
 ## Autoría
 
@@ -82,11 +81,11 @@ es idéntica para todos los equipos. El trabajo propio del equipo está en:
 | `trazas/prueba.csv` | Traza **provisional** para desarrollo (no es la oficial del docente) |
 | `analisis/exportar_csv.py` | Bag → `queue_state.csv` y `joint_states.csv` |
 | `analisis/metricas.py` | Espera media/p95/máxima, inanición, Jain, rechazos con causas, violaciones de exclusión mutua y figura comparativa |
-| `docs/tabla_dh.md` / `.pdf` | Tabla DH, convención y predicciones de las 3 poses |
-| `docs/diseño_previo.md` / `.pdf` | Diseño previo: predicción, protocolo y comandos del ítem 3 |
+| `docs/tabla_dh.md` | Tabla DH, convención y predicciones de las 3 poses |
+| `docs/diseño_previo.md` | Diseño previo: predicción, protocolo y comandos del ítem 3 |
 | `docs/ensayo_previo_ros2.md` | Paso a paso del ensayo con ROS 2 antes de las corridas oficiales |
 | `docs/item4_auditoria_ik.md` | Qué demuestra el ítem 4, tabla de evidencia y lista de verificación |
-| `docs/cierre_reflexivo.md` / `.pdf` | Cierre reflexivo: qué política llevar a CapyTown |
+| `docs/cierre_reflexivo.md` | Cierre reflexivo: qué política llevar a CapyTown |
 | `evidencias/` | `item1/` (predicción previa y validación de la FK), `medición_fk.csv` (encabezado), `item_3/` (una carpeta por política, la figura y los resultados) e `item_4/auditoria_ik.csv` |
 
 ## Reglas del reto y cómo las cubre el diseño
@@ -303,7 +302,7 @@ ejecución, la longitud de la cola, las esperas y los totales aceptados/rechazad
 
 - Diagrama de secuencia: `docs/diseño_previo.md`, sección 2 (Mermaid).
 - Registro de rechazos con motivo: `rechazos.csv` lo genera el broker; en las pruebas con ROS simulado se
-  comprueban todas las causas. Con el robot se hubiera adjuntado el de la corrida oficial.
+  comprueban todas las causas. El registro de una corrida real faltó por desarrollar.
 
 ### Pruebas
 
@@ -346,7 +345,7 @@ cd src/arm_broker && python3 -m unittest discover -s tests -v
 
 No necesitan ROS 2 ni el robot. `simulacion_ros.py` (sin pruebas) sustituye `rclpy` por dobles,
 incluida la máquina de estados de los goals. Las pruebas del broker se omiten si ROS 2 está
-instalado y no sustituyen la prueba real, que hubiera sido correr el broker y los clientes en el Jetson.
+instalado y no sustituyen la prueba real: correr el broker y los clientes en el Jetson faltó por desarrollar.
 
 Se retiraron las pruebas ampliadas de los ítems 2, 3 y 4 (cancelación, excepciones, cupo
 concurrente, UUID, validación del CSV y del modo asíncrono, revalidación del paso, métricas
@@ -446,24 +445,23 @@ evidencia queda en `evidencias/item_4/auditoria_ik.csv`. Detalle, tabla de evide
 resultado y la pregunta de la semana 5 (¿por qué esa solución y no la del codo contrario?) en
 [`docs/item4_auditoria_ik.md`](docs/item4_auditoria_ik.md).
 
-Con el robot se hubiera registrado el objetivo pedido, el `q` ejecutado, `FK(q)` y el error. No hay filas
-reales en el CSV: no se inventaron.
+La sesión con el brazo faltó por desarrollar: el CSV solo tiene el encabezado y no se inventaron filas.
 
 ## Lista de entregables
 
 - [x] Paquetes `arm_broker` y `arm_broker_interfaces` en GitHub.
 - [x] README con instrucciones de ejecución (este archivo).
-- [x] Documento de diseño previo: tabla DH, diagrama de secuencia y predicción del p95 por política (`docs/diseño_previo.*`).
+- [x] Documento de diseño previo: tabla DH, diagrama de secuencia y predicción del p95 por política (`docs/diseño_previo.md`).
 - [x] Validación de las 3 poses del ítem 1 (`evidencias/item1/`).
 - [x] Herramienta y documento de la auditoría del ítem 4 (`auditar_ik.py`, `docs/item4_auditoria_ik.md`); el CSV queda con el encabezado porque no se hizo la sesión con el robot.
-- [x] Cierre reflexivo (`docs/cierre_reflexivo.*`), razonado con la predicción.
-- [ ] No realizado (requiere el robot y la traza oficial): bag, CSV y figura comparativa (`evidencias/item_3/`) y video de 3 minutos.
+- [x] Cierre reflexivo (`docs/cierre_reflexivo.md`), razonado con la predicción.
+- [ ] Faltó por desarrollar: bag, CSV y figura comparativa (`evidencias/item_3/`) y video de 3 minutos.
 
 ## Rúbrica (20 pts)
 
 | Criterio | Pts | Dónde se evidencia |
 |---|:-:|---|
-| FK correcta y verificada contra el robot real | 4 | `fk.py`, `docs/tabla_dh.*`, `evidencias/item1/` |
+| FK correcta y verificada contra el robot real | 4 | `fk.py`, `docs/tabla_dh.md`, `evidencias/item1/` |
 | Broker: exclusión mutua y encolado correcto | 5 | `broker.py`, `politicas.py`, bag de `/joint_states` |
 | Admisión validada con FK y rechazos razonados | 3 | `goal_callback`, registro de rechazos |
 | Medición y comparación de políticas | 4 | `evidencias/`, figura comparativa |
