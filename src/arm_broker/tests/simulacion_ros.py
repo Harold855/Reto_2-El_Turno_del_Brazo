@@ -1,8 +1,8 @@
-""" Simulación de ROS 2 para las pruebas esenciales — sin ROS 2 ni robot """
+""" Simulación de ROS 2 que se iban a usar en las pruebas esenciales """
 
-"""No contiene pruebas: solo los dobles de rclpy y de las interfaces, el doble del
+"""No se necesito el brazo. Ya que esta simulacion se pudo elaborar mediante dobles de rclpy y de las interfaces, el doble del
 ServerGoalHandle (con la máquina de estados de rclpy) y utilidades para armar un broker
-instrumentado. Las pruebas están en test_esenciales.py"""
+instrumentado."""
 import enum
 import os
 import sys
