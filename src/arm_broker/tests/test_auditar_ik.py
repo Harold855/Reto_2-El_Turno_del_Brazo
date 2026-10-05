@@ -1,9 +1,7 @@
-""" Pruebas de herramientas/auditar_ik.py (ítem 4) — sin robot """
+""" Pruebas de herramientas/auditar_ik.py (ítem 4) """
 
 """Se prueban la matemática del error, la conversión grados/radianes, el registro de evidencia y
-el flujo completo con un brazo simulado que se comporta como un MyCobot
-
-    cd src/arm_broker && python3 -m unittest discover -s test -v
+el flujo completo con un brazo simulado que se comporta como un MyCobot cd src/arm_broker && python3 -m unittest discover -s test -v
 """
 import math
 import os
