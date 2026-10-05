@@ -14,14 +14,13 @@ de apoyo, ya que si FK(q_real) y get_coords() coinciden pero ambos están lejos 
 no llegó, pero si FK(q_real) y get_coords() difieren de forma constante, hay un desfase de marco o de
 la tabla DH (se puede ver en docs/item4_auditoria_ik.md)"""
 
-"""Uso (en el Jetson, con el puerto serie libre y el espacio despejado alrededor del brazo):
+"""Uso:
 
-    python3 auditar_ik.py --plantilla          # imprime la tabla vacía; no necesita el robot
-    python3 auditar_ik.py --solo-leer          # no mueve: compara FK(q) con get_coords() donde está
+    python3 auditar_ik.py --plantilla          # imprime la tabla vacía
+    python3 auditar_ik.py --solo-leer          # no mueve el brazo, solo compara FK(q) con get_coords() donde está
     python3 auditar_ik.py --x X --y Y --z Z --rx RX --ry RY --rz RZ \\
                           --confirmo-espacio-despejado --guardar
-
-No hay objetivo por defecto: el punto físico seguro sobre el tablero se define en la sesión"""
+"""
 
 import argparse
 import csv
@@ -32,7 +31,7 @@ import time
 
 RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 sys.path.insert(0, os.path.join(RAIZ, 'src', 'arm_broker'))
-from arm_broker import fk                                        # noqa: E402
+from arm_broker import fk                                        
 
 # 1. Parámetros por defecto
 PUERTO = '/dev/ttyUSB0'
@@ -221,7 +220,7 @@ def main(argv=None):
     hay_objetivo = None not in objetivo
     hay_orientacion = None not in orientacion
 
-    # Sin objetivo físico definido no se mueve nada
+    # Sin haber un objetivo físico definido entonces no se moveria nada
     if not args.solo_leer:
         if not hay_objetivo or not hay_orientacion:
             print('Aún no se definió el objetivo físico: faltan --x --y --z y --rx --ry --rz.\n'
