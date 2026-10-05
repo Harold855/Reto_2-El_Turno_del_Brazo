@@ -1,8 +1,7 @@
 """ Pruebas de las herramientas de análisis del ítem 3 (metricas.py y simular_politicas.py) """
 
-"""No necesitan ROS 2: se generan CSV sintéticos con el mismo formato que exportar_csv.py
-
-    cd src/arm_broker && python3 -m unittest discover -s test -v
+"""Para elaborar este test no se necesito ROS 2, pues se elaboraron CSV con el mismo formato que exportar_csv.py 
+   cd src/arm_broker && python3 -m unittest discover -s test -v
 """
 import csv
 import os
