@@ -1,4 +1,4 @@
-""" Cliente del broker: cada integrante levanta el suyo — Reto 2 """
+""" Cliente del broker """
 
 import csv
 import math
@@ -181,7 +181,7 @@ class Cliente(Node):
             f'[{self.client_id}] pose {i}: success={r.success} '
             f'espera={r.wait_time_s:.2f}s ejec={r.exec_time_s:.2f}s — {r.message}')
 
-    # 4. Feedback del broker
+# 4. Feedback del broker
     def feedback(self, msg):
         """Se muestra el estado del goal: QUEUED con su posición en la cola, o EXECUTING"""
         """Se limita a un mensaje por segundo para no llenar la terminal"""
@@ -215,6 +215,7 @@ def main(args=None):
         if rclpy.ok():
             rclpy.shutdown()
     sys.exit(codigo)
+    
 
 
 if __name__ == '__main__':
