@@ -1,4 +1,4 @@
-""" Políticas de cola FIFO y Round Robin — Ítems 2 y 3 del Reto 2 """
+""" Políticas de cola FIFO y Round Robin """
 
 import threading
 import time
@@ -6,10 +6,10 @@ import time
 
 # 1. Pedido: un goal aceptado que espera su turno
 class Pedido:
-    """Se guarda un goal aceptado junto con los tiempos que usa el broker"""
+    """Primero se guarda un goal aceptado junto con los tiempos que usa el broker"""
     """Parametros: goal_handle -> manejador del goal en el ActionServer
                    client_id -> nombre del cliente que lo envió
-                   priority -> prioridad 0..255, mayor número = más urgente
+                   priority  -> prioridad 0..255, mayor número = más urgente
                    joint_positions -> objetivo articular q1..q6 en rad"""
     def __init__(self, goal_handle, client_id, priority, joint_positions):
         self.goal_handle = goal_handle
@@ -23,7 +23,6 @@ class Pedido:
         self.resultado = None           # Result que devuelve execute_callback
         self.lanzado = False            # True cuando ya se llamó a goal_handle.execute()
 
-    @property
     def espera_s(self):
         """Se calcula cuánto lleva esperando (o cuánto esperó, si ya empezó), en segundos"""
         fin = self.t_inicio_ejec if self.t_inicio_ejec else time.time()
@@ -48,10 +47,10 @@ class Politica:
 
 
 # 3. Política FIFO
-# Es la política obligatoria: se atiende en orden estricto de llegada.
-# siguiente(pendientes) devuelve el ÍNDICE del pedido a atender, o None.
-# Cada Pedido trae: client_id, priority, t_llegada y espera_s.
-# Las políticas no modifican `pendientes`: eso lo hace el worker del broker, bajo su lock.
+# Es la política principal: se atiende en orden estricto de llegada
+# siguiente(pendientes) devuelve el ÍNDICE del pedido a atender, o None
+# Cada Pedido trae: client_id, priority, t_llegada y espera_s
+# Las políticas no modifican 'pendientes', porque eso lo hace el worker del broker, bajo su lock
 class FIFO(Politica):
     """Se atiende primero al pedido que llegó primero, sin mirar cliente ni prioridad"""
     nombre = 'fifo'
@@ -65,8 +64,8 @@ class FIFO(Politica):
         return min(range(len(pendientes)), key=lambda i: pendientes[i].t_llegada)
 
 
-# 4. Política Round Robin entre clientes
-# Es la segunda política: el turno rota entre clientes y la prioridad numérica se ignora.
+# 4. Segunda política Round Robin entre clientes
+# Ahora el turno rota entre clientes y la prioridad numérica se ignora.                 
 class RoundRobin(Politica):
     """Se reparte el turno entre clientes por rotación circular"""
     """Se recuerda el orden en que apareció cada cliente y quién fue el último atendido"""
@@ -113,8 +112,6 @@ class RoundRobin(Politica):
         self.ultimo = pedido.client_id
 
 
-# 5. Registro de políticas disponibles
-# La clave es el valor del parámetro `politica` del broker.
 
 POLITICAS = {
     'fifo': FIFO,
