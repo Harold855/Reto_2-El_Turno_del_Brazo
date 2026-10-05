@@ -2,10 +2,6 @@
 """Genera un CSV de poses para que los cuatro clientes lo reproduzcan.
 
     python3 generar_carga.py --n 40 --semilla 7 --salida carga.csv
-
-Misma semilla = mismo archivo. Úsenlo para que las corridas de FIFO y de la otra
-política sean comparables: si cada corrida usa poses distintas, las métricas no
-se pueden comparar.
 """
 import argparse, csv, os, random, sys
 
