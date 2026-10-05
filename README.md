@@ -443,10 +443,8 @@ evidencia queda en `evidencias/item_4/auditoria_ik.csv`. Además, la sesión con
 
 ## Equipo
 
-| Integrante | Rol |
+| Integrante | Equipo |
 |---|---|
 | Jorge Daniel Rivera Nagaro | Equipo 8 |
 | Harold Lincoln Payco Espinoza | Equipo 8 |
 | Rodrigo Sebastián Escobar Rosado | Equipo 8 |
-
-Equipo n.º 8 · `ROS_DOMAIN_ID` = 50 (42 + 8). En las corridas, los clientes son A, B, C y D con prioridades 1, 2, 3 y 4.
