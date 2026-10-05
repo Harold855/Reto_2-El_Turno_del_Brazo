@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-# Corre UNA política del ítem 3 con el protocolo fijo y deja la evidencia en evidencias/item3/<política>/
+# Script que ejecuta una política del ítem 3 con el protocolo fijo y deja la evidencia 
 #
 #   bash herramientas/experimento_item3.sh fifo
 #   bash herramientas/experimento_item3.sh round_robin
 #
-# La única diferencia entre las dos corridas es `politica:=`. Todo lo demás sale de las variables de
-# abajo, que se guardan en protocolo.txt para poder demostrar que fueron iguales.
+# La única diferencia entre las dos ejecuciones es `politica:=`. Todo lo demás sale de las variables que se mencionan 
+# abajo, el cual estas se guardan en protocolo.txt para poder demostrar que fueron iguales.
 #
-# Requisitos: ROS 2 Humble y el workspace ya con `source` (ros2 run arm_broker broker debe existir),
-# y ROS_DOMAIN_ID propio. Este script NO arranca el driver del brazo: con o sin robot, el broker
-# publica /joint_states igual.
-#
-# Variables (con su valor por defecto):
+# Variables:
 #   TRAZA        CSV de poses; la traza OFICIAL del docente en la corrida real
 #   CLIENTES     "A:1 B:2 C:3 D:4"  nombre:prioridad, en el orden en que arrancan
 #   REPETICIONES 1
@@ -24,8 +20,7 @@
 
 set -euo pipefail
 
-# Con control de trabajos cada proceso en segundo plano lleva su propio grupo y recibe SIGINT con
-# normalidad; sin él, bash los lanza ignorando SIGINT y `kill -INT` no detendría el bag ni el broker
+# Con control de trabajos cada proceso en segundo plano lleva su propio grupo y recibe SIGINT con normalidad; sin él, bash los lanza ignorando SIGINT y `kill -INT` no detendría el bag ni el broker
 set -m
 
 POLITICA="${1:-}"
