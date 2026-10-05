@@ -1,6 +1,6 @@
 # Cierre reflexivo 
 
-**Equipo:** 8 (Harold Lincoln Payco Espinoza, Jorge Daniel Rivera Nagaro, Rodrigo Sebastian Escobar Rosado) · **Fecha:** 4 de octubre de 2026
+**Equipo:** 8 () · **Fecha:** 4 de octubre de 2026
 
 ## 1. Qué hubieramos medimos
 
