@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| Equipo 8 / `ROS_DOMAIN_ID` | `[ ]` / `[ ]` |
+| Equipo / `ROS_DOMAIN_ID` | 8 / 50 (42 + 8) |
 | Integrantes | `H.L.P.E`, `J.D.R.N`, `R.S.E.R` |
-| Firma y fecha | `[ ]` |
+| Congelado | Predicciones del ítem 1 en el commit `a0cbc35` (2026-09-30); las del ítem 3, en este documento, antes de cualquier corrida |
 
 ## 1. Tabla DH y predicción previa (ítem 1)
 
@@ -24,7 +24,7 @@ dedujeron en pizarra con los vectores x, y, z (rotación y traslación) de cada 
 | 5 | q5 + 90° | 75.55 | 0 | −90° |
 | 6 | q6 | 50 | 0 | 0° |
 
-Detalle (marcos, límites articulares, workspace y puntos por confirmar) en [`tabla_dh.md`](tabla_dh.md).
+Detalle (marcos, límites articulares, workspace y limitaciones) en [`tabla_dh.md`](tabla_dh.md).
 
 ### 1.2 Predicción previa de las 3 poses
 
@@ -122,8 +122,8 @@ Comprobación con `n = 10`, `T = 3.05`: FIFO, cliente 0 → media 13.7 s y p95 2
 
 **Valores para el caso de referencia**: 4 clientes × 10 poses × 1 repetición (`N = 40`), `T = 3.05 s`,
 arranque escalonado A→D, prioridades A=1, B=2, C=3, D=4. Salen de
-`python3 herramientas/simular_politicas.py --poses 10`. **Se vuelven a calcular con el número real
-de poses de la traza oficial antes de congelar este documento.**
+`python3 herramientas/simular_politicas.py --poses 10`. **Con la traza oficial se hubieran recalculado
+con su número real de poses antes de congelar este documento.**
 
 | Métrica | FIFO | Round Robin |
 |---|---|---|
@@ -247,9 +247,9 @@ El equipo **no escribe un solver de cinemática inversa**: pide un objetivo cart
 - **Herramienta y evidencia.** `herramientas/auditar_ik.py` (probada sin robot) y
   `evidencias/item_4/auditoria_ik.csv`, que por ahora solo tiene el encabezado: las filas se agregan
   con `--guardar` durante la sesión con el robot.
-- **Estado.** Herramienta, pruebas y documento listos; falta la sesión. Detalle en
+- **Estado.** Herramienta, pruebas y documento completados; la sesión con el brazo no se realizó y se describe como se hubiera hecho. Detalle en
   [`item4_auditoria_ik.md`](item4_auditoria_ik.md).
 
 ## 5. Cierre reflexivo
 
-Borrador en [`cierre_reflexivo.md`](cierre_reflexivo.md); los resultados se completan después de medir.
+Ver [`cierre_reflexivo.md`](cierre_reflexivo.md): la decisión se razona con la predicción, porque no se hicieron las corridas oficiales.

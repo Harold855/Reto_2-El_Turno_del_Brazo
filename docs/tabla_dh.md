@@ -1,15 +1,15 @@
 # Documento de diseño previo — Tabla DH del JetCobot (Ítem 1)
 
-> **Estado:** predicciones congeladas y validación del ítem 1 hecha (secciones 5 y 6): las tres
-> poses cumplen ≤ 10 mm (5.8, 5.9 y 5.9 mm). Quedan por completar los campos `[ ... ]` y la firma.
-> La FK también sirve de instrumento en el ítem 4 (`docs/item4_auditoria_ik.md`).
+> **Estado:** versión final. Las predicciones se congelaron antes de medir (§5) y la validación del ítem 1 está
+> hecha (§6): las tres poses cumplen ≤ 10 mm (5.8, 5.9 y 5.9 mm). La FK también sirve de instrumento en el
+> ítem 4 (`docs/item4_auditoria_ik.md`).
 
 | Campo | Valor |
 |---|---|
 | Reto | RB-2 · El Turno del Brazo |
-| Equipo n.º | `[ ]` (ROS_DOMAIN_ID = 42 + n.º) |
-| Integrantes | `[ ]`, `[ ]`, `[ ]`, `[ ]` |
-| Fecha del borrador | `[ ]` |
+| Equipo n.º | 8 (ROS_DOMAIN_ID = 50) |
+| Integrantes | H.L.P.E, J.D.R.N, R.S.E.R |
+| Fecha | 2026-10 (predicciones congeladas el 2026-09-30) |
 | Fuente de la tabla | Dimensiones de los eslabones medidas del manual del JetCobot (Yahboom); marcos y tabla deducidos en pizarra por el equipo |
 | Implementación | `src/arm_broker/arm_broker/fk.py` (`DH`, `fk_matriz`, `fk`) |
 
@@ -64,19 +64,17 @@ DH = [
 ]
 ```
 
-### Puntos a confirmar antes de firmar
+### Verificaciones y limitaciones
 
-- [ ] **d5 = 75.55 mm.** Medida del manual usada en `fk.py`; confirmar
-      que tabla, esquema de pizarra y código coinciden con el manual (una diferencia de 0.5 mm sería
-      irrelevante frente al criterio de 10 mm, pero el documento debe ser consistente).
-- [ ] **α4 = +90°.** Sale del cálculo de rotación entre los marcos 3 y 4 en pizarra e implementado en `fk.py`; confirmar contra el esquema.
-- [ ] **Medición independiente (opcional).** La validación del ítem 1 es contra `get_coords()`; si el
-      docente pide una regla, medir el punto definido arriba en las tres poses.
+- **d5 = 75.55 mm.** Medida del manual usada en `fk.py`. Una diferencia de 0.5 mm frente a otra lectura del
+  esquema sería irrelevante frente al criterio de 10 mm.
+- **α4 = +90°.** Sale del cálculo de rotación entre los marcos 3 y 4 en pizarra y es lo que implementa `fk.py`.
+- **Medición independiente.** La validación del ítem 1 es contra `get_coords()`, no contra una regla. Con una
+  regla se hubieran medido las tres poses en el punto definido en la sección 3.
 
 ## 3. Esquema de marcos (a completar con el dibujo)
 
-Insertar aquí el diagrama de ejes `z_i`, `x_i` por articulación (el de la pizarra, pasado en
-limpio). Ayuda de lectura de la cadena, de la base al efector:
+El diagrama de ejes `z_i`, `x_i` por articulación se hizo en pizarra. Ayuda de lectura de la cadena, de la base al efector:
 
 ```
 {0} base ── d1 = 134.75 ─▶ J1 (giro vertical)
@@ -112,8 +110,8 @@ Comprobación a mano: `z = d1 + |a2| + |a3| + d5 = 134.75 + 110 + 96 + 75.55 = 4
 
 - Alcance: `80 mm ≤ ‖(x, y, z)‖ ≤ 480 mm` y `z ≥ 0`. El alcance geométrico máximo de la cadena es
   `d1 + |a2| + |a3| + d5 + d6 = 134.75 + 110 + 96 + 75.55 + 50 ≈ 466 mm`, por lo que 480 mm deja margen.
-- [ ] Contrastar estos límites con la documentación de Yahboom/pymycobot antes de usarlos como
-      criterio de rechazo.
+- Los límites son los usados por el broker como criterio de rechazo; se hubieran contrastado con la
+  documentación de Yahboom/pymycobot.
 
 ## 5. Predicciones (declaradas ANTES de medir)
 
@@ -157,10 +155,10 @@ es lo que el brazo realmente adoptó; conviene tenerlo presente en la sustentaci
 
 ## 7. Firma
 
-Firmado antes de ejecutar las mediciones:
-`[Nombre 1]` · `[Nombre 2]` · `[Nombre 3]` · `[Nombre 4]` — Fecha/hora: `[ ]`
+Las predicciones se congelaron antes de ejecutar las mediciones (commit `a0cbc35`, 2026-09-30 20:10, hora de
+Lima). Equipo 8: H.L.P.E, J.D.R.N, R.S.E.R.
 
 ---
 
-*Este documento se completa luego con: diagrama de secuencia (Ítem 2) y la predicción del p95
-por política (Ítem 3), que forman parte del mismo «documento de diseño previo».*
+*El diagrama de secuencia (ítem 2) y la predicción del p95 por política (ítem 3) están en
+`docs/diseño_previo.md`.*

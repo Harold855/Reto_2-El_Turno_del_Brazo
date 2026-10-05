@@ -1,39 +1,46 @@
 # Cierre reflexivo — ¿Qué política de cola llevaríamos a CapyTown y por qué?
 
-> **BORRADOR (máximo una página).** Los campos `[ ]` se completan con los resultados de las corridas
-> oficiales (`evidencias/item_3/resultados.md`). No se cambia la predicción del documento de diseño previo.
+> Versión final. No se hicieron las corridas oficiales con el robot, así que la columna «medido» se redacta
+> como se hubiera contrastado y la decisión se apoya en la predicción del diseño previo.
 
-**Equipo:** `[ ]` · **Fecha:** `[ ]`
+**Equipo:** 8 (H.L.P.E, J.D.R.N, R.S.E.R) · **Fecha:** octubre de 2026
 
 ## 1. Qué medimos
 
-Comparamos FIFO y Round Robin con la misma traza, los mismos cuatro clientes y prioridades, el modo
-asíncrono, la misma duración e interpolación y el mismo procedimiento de inicio; solo cambió
-`politica:=`. Registramos `/arm/queue_state` y `/joint_states` con `ros2 bag`.
+Se hubieran comparado FIFO y Round Robin con la misma traza, los mismos cuatro clientes y prioridades, el modo
+asíncrono, la misma duración e interpolación y el mismo procedimiento de inicio; solo cambiaría
+`politica:=`. Se hubieran registrado `/arm/queue_state` y `/joint_states` con `ros2 bag`.
 
-## 2. Qué esperábamos y qué obtuvimos
+## 2. Qué esperábamos y qué se hubiera contrastado
 
-| Métrica | Predicho FIFO / RR | Medido FIFO / RR | ¿Coincide? |
-|---|---|---|---|
-| Violaciones de exclusión mutua | 0 / 0 | `[ ]` / `[ ]` | `[ ]` |
-| Espera media / p95 global | 58.7 s · 111 s / 58.7 s · 112 s (caso de referencia; recalcular con la traza real) | `[ ]` | `[ ]` |
-| p95 por prioridad | `[ ]` | `[ ]` | `[ ]` |
-| Índice de inanición | 27 s / 110 s | `[ ]` / `[ ]` | `[ ]` |
-| Jain al final / a mitad | 1.000 · 0.5 / 1.000 · 1.0 | `[ ]` | `[ ]` |
-| Rechazos (cantidad y causa) | 0 / 0 | `[ ]` | `[ ]` |
+| Métrica | Predicho FIFO / RR (caso de referencia) | Cómo se hubiera contrastado |
+|---|---|---|
+| Violaciones de exclusión mutua | 0 / 0 | `metricas.py` sobre `/joint_states`: debía dar 0 |
+| Espera media / p95 global | 58.7 s · 111 s / 58.7 s · 112 s | Misma media; p95 casi igual, con ±unos segundos por la resolución |
+| p95 por prioridad 1/2/3/4 | 27/57/87/117 s / 110/112/115/117 s | Desigual en FIFO, casi parejo en Round Robin |
+| Índice de inanición | 27 s / 110 s | Peor en Round Robin con este orden de llegada |
+| Jain al final / a mitad | 1.000 · 0.5 / 1.000 · 1.0 | Final igual; a mitad FIFO < Round Robin |
+| Rechazos | 0 / 0 | `rechazos.csv` vacío en ambas |
 
-Donde la medición se aparta de la predicción, la explicación es: `[ ]`.
+Cualquier desviación mayor a unos pocos segundos se hubiera explicado por la resolución de 0.2 s o por el
+orden real de llegada de las ráfagas.
 
 ## 3. Inanición
 
-Espera máxima de la prioridad más baja en cada política y qué la explica (orden de llegada, ráfagas): `[ ]`.
+En la predicción, la espera máxima de la prioridad más baja (cliente A) es 27 s en FIFO, porque llega primero,
+y 110 s en Round Robin, porque su último goal espera casi toda la corrida. Round Robin iguala las esperas medias
+por cliente, pero no reduce las esperas extremas; FIFO las concentra en quien llega al final.
 
 ## 4. Decisión
 
-Llevaríamos a CapyTown **`[ FIFO / Round Robin / otra ]`** porque `[ ]`. Criterios a pesar con nuestros datos:
-si importa más la igualdad entre visitantes o la urgencia, si pesa más la espera máxima que la media
-(la media global no cambió entre políticas), y si un cliente con ráfagas puede acaparar el brazo.
+Llevaríamos a CapyTown **Round Robin**, porque los visitantes son pares y lo importante es que ninguno
+acapare el brazo: iguala las esperas por cliente (Jain ≈ 1.0 a mitad de corrida) y un cliente con ráfagas no
+bloquea a los demás. La espera media global no cambia entre políticas, así que no hay un costo de eficiencia.
+Si importara más la espera máxima de quien llega primero, o la urgencia, FIFO o una política con prioridades
+serían preferibles. Esta decisión sale de la predicción y se hubiera confirmado con las corridas.
 
 ## 5. Limitaciones
 
-Resolución de 0.2 s (5 Hz), una corrida por política, traza finita (Jain final siempre 1.000): `[ ]`.
+Resolución de 0.2 s (5 Hz), una corrida por política y traza finita (Jain final siempre 1.000). Además, no se
+hicieron las corridas oficiales con el robot ni el ensayo con ROS 2 real: las pruebas se hicieron con ROS
+simulado y datos sintéticos.

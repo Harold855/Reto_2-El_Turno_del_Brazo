@@ -26,12 +26,12 @@ ros2 topic echo /arm/queue_state     # un solo executing_goal_id a la vez
 ros2 topic info /joint_states -v     # Publisher count: 1 (arm_broker)
 ```
 
-Debe cumplirse:
+Debía cumplirse (el ensayo no se hizo con ROS 2 real; son los criterios que se hubieran verificado):
 
-- [ ] `/arm/queue_state` publica a ~5 Hz (aunque no haya goals).
-- [ ] Solo el nodo `arm_broker` publica `/joint_states` (antes de lanzar clientes: 0 mensajes).
-- [ ] Nunca hay más de un `executing_goal_id`.
-- [ ] Varios goals pueden estar en cola a la vez (`queue_length` > 1).
+- `/arm/queue_state` publica a ~5 Hz (aunque no haya goals).
+- Solo el nodo `arm_broker` publica `/joint_states` (antes de lanzar clientes: 0 mensajes).
+- Nunca hay más de un `executing_goal_id`.
+- Varios goals pueden estar en cola a la vez (`queue_length` > 1).
 
 Repetir con `-p politica:=round_robin`.
 

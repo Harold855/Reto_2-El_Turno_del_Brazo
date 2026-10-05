@@ -51,4 +51,5 @@ La columna «Predicho» se copia de `docs/diseño_previo.md` **sin cambiarla**.
 
 ## Conclusión (una frase que sostenga la figura)
 
-`[completar]`
+Sin corridas oficiales no hay medición que contrastar. Con las corridas se hubiera resumido aquí, en una
+frase, la diferencia entre políticas que muestra la figura.
