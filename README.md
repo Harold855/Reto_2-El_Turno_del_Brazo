@@ -42,7 +42,7 @@ ROS 2). Lo que dependía del Jetson y del brazo **faltó por desarrollar**.
 | 4 | Objetivo cartesiano (`send_coords`) auditado con la FK | 2 | `auditar_ik.py`, CSV de evidencia (solo encabezado) y `docs/item4_auditoria_ik.md` completados · **faltó por desarrollar** la sesión con el brazo |
 | — | Diseño previo y cierre reflexivo | 2 | **Completado**: `docs/diseño_previo.md` y `docs/cierre_reflexivo.md` |
 
-### Faltó por desarrollar
+### Lo que nos faltó por desarrollar
 
 - El ensayo con ROS 2 (`docs/ensayo_previo_ros2.md`) y la prueba del broker y los clientes en el Jetson.
 - Las dos corridas oficiales (`experimento_item3.sh fifo` y `round_robin`), el bag, el CSV y la figura comparativa.
