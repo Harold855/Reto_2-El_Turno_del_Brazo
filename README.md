@@ -2,7 +2,7 @@
 
 Cinemática directa y acceso concurrente al JetCobot con **ROS 2 Humble**.
 
-Objetivo Original: Cuatro clientes, un solo brazo. Ningún cliente publica en `/joint_states`, pues solo el worker del
+Objetivo: Cuatro clientes, un solo brazo. Ningún cliente publica en `/joint_states`, pues solo el worker del
 nodo `arm_broker` (en el Jetson) habla con el driver. El broker recibe goals por una acción,
 los admite o rechaza con la FK, luego los encola según una política y finalmente los ejecuta en uno en uno.
 
@@ -31,10 +31,10 @@ Flujo inicial en ASCII (equivalente):
 
 ## Estado del proyecto
 
-Estado de entrega. Los ítems 2 y 4 habían quedado cerrados sin pruebas físicas por la fecha límite de entrega
-(lunes 05 de octubre). El lunes 06 de octubre se aprovechó el espacio para probarlos con el robot y se
-actualizaron el código, la evidencia y la documentación, de modo que **los ítems 1, 2 y 4 quedaron completados**. Pero, el
-**ítem 3 se realizó a medias**, pues su código se creó para probarlo en el brazo, pero por falta de tiempo y de apoyo no se
+Estado de entrega. Los ítems 2 y 4 habían quedado cerrados sin pruebas físicas por la **fecha límite de entrega
+(lunes 05 de octubre)**. El **lunes 06 de octubre** se aprovechó el espacio para probarlos con el robot y se
+actualizaron el código, la evidencia y la documentación, de modo que **los ítems 1, 2 y 4 quedaron completados**. El
+**ítem 3 se realizó a medias**: su código se creó para probarlo en el brazo, pero por falta de tiempo y de apoyo no se
 pudo completar la medición.
 
 | Ítem | Contenido | Pts | Estado |
@@ -221,7 +221,7 @@ ros2 topic echo /arm/queue_state
 
 ### Tabla DH
 
-Las medidas del robot se tomaron del manual del JetCobot (Yahboom); luego, en pizarra, el equipo calculó los vectores x, y, z (rotación y traslación) de cada articulación y los llevó a la tabla DH. DH estándar, `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, `θ_i = q_i + offset_i`,
+Las medidas del robot se tomaron del manual del JetCobot (Yahboom); luego, en papel, el equipo calculó los vectores x, y, z (rotación y traslación) de cada articulación y los llevó a la tabla DH. Además se complemento con la tabla realizada por el profesor. DH estándar, `A_i = Rot_z(θ_i)·Trans_z(d_i)·Trans_x(a_i)·Rot_x(α_i)`, `θ_i = q_i + offset_i`,
 `T_0_6 = A1·…·A6`. Implementada en `fk.py`; justificación y marcos en
 [`docs/tabla_dh.md`](docs/tabla_dh.md) y [`docs/diseño_previo.md`](docs/diseño_previo.md).
 
@@ -236,11 +236,9 @@ Las medidas del robot se tomaron del manual del JetCobot (Yahboom); luego, en pi
 
 ### Poses, predicción previa, medición real y error
 
-Se probaron 4 poses; se usan **las 3 primeras** (`cero`, `ready`, `girada`). La predicción se declaró
-antes de medir (`evidencias/item1/predicciones_antes_de_medir.txt`, commit `a0cbc35`, anterior a la
-validación `84e9f1a`). La validación (`evidencias/item1/validacion_fk.txt`) lee el `q` que el brazo
-realmente adoptó (`get_angles()`), calcula `FK(q_real)` y lo compara con la posición que reporta el
-robot (`get_coords()`).
+Se probaron 4 poses; pero para la documentacion se usaron **las 3 primeras** (`cero`, `ready`, `girada`). La predicción de estas poses se declaró
+antes de medir (`evidencias/item1/predicciones_antes_de_medir.txt`). La validación (`evidencias/item1/validacion_fk.txt`) lee el `q` que el brazo
+realmente adoptó (`get_angles()`), calcula `FK(q_real)` y lo compara con la posición que reporta el brazo (`get_coords()`).
 
 | Pose | q comandado [rad] | Predicción previa [mm] | FK(q_real) [mm] | Robot, `get_coords()` [mm] | Error [mm] | ≤ 10 mm |
 |---|---|---|---|---|---:|:-:|
@@ -248,17 +246,17 @@ robot (`get_coords()`).
 | `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | (96.62, −39.43, 402.83) | (102.1, −38.6, 400.9) | (100.9, −40.5, 395.4) | **5.9** | Sí |
 | `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | (102.23, 11.03, 407.62) | (108.4, 14.6, 404.4) | (108.2, 11.9, 399.0) | **5.9** | Sí |
 
-Error medio 5.9 mm, máximo 5.9 mm. **Conclusión: la FK propia cumple el criterio de ≤ 10 mm en las tres
-poses.** La cuarta pose probada (`baja`) dio 6.0 mm y no se cuenta.
+Error medio 5.9 mm, máximo 5.9 mm. 
+**Conclusión: FK logró cumplir el criterio de ≤ 10 mm en las tres
+poses.** Además, la cuarta pose probada (`baja`) dio 6.0 mm, por lo que tambien pasó las pruebas.
 
-- El error es casi constante entre poses, sobre todo en z (`FK(q_real) − Robot` ≈ +5.5 mm), lo que es
+- El error es casi constante entre poses, sobre todo en z (`FK(q_real) − Brazo` ≈ +5.5 mm), lo que es
   compatible con un desfase de marco o de herramienta más que con un error en los `a_i`.
 - El brazo no llega exactamente al `q` comandado, por eso el error se mide con `q_real`. Si se
   comparara la predicción declarada contra el robot saldría 8.4, 8.6 y 10.5 mm (`girada` pasaría de
-  10 mm); tenerlo presente en la sustentación.
-- «Robot» es lo que reporta el firmware con `get_coords()`, no una medición independiente con regla.
-
-### Cómo repetirlo
+  10 mm).
+  
+### Cómo repetir o comprobar este item
 
 ```bash
 python3 herramientas/verificar_fk.py              # mueve el brazo por las poses de prueba (Jetson, puerto libre)
@@ -267,8 +265,11 @@ python3 herramientas/verificar_fk.py --solo-leer  # solo compara donde está el 
 
 ## Ítem 2 — Broker
 
-Flujo de un goal: **admisión** (`goal_callback`, barata e inmediata) → **encolado**
-(`handle_accepted_callback`) → **ejecución exclusiva** (worker único → `execute_callback`).
+Flujo de un goal:
+
+**admisión** (`goal_callback`, es inmediato) → **encolado**
+                               (`handle_accepted_callback`) → **ejecución exclusiva** 
+                               (worker único → `execute_callback`).
 
 Rechazos con motivo, todos calculados con `fk.py`:
 
@@ -323,17 +324,17 @@ Cómo está armado el broker (`broker.py`):
 `/arm/queue_state` (`arm_broker_interfaces/msg/QueueState`) se publica a 5 Hz con el cliente en
 ejecución, la longitud de la cola, las esperas y los totales aceptados/rechazados/completados.
 
-- Diagrama de secuencia: `docs/diseño_previo.md`, sección 2 (Mermaid).
+- Diagrama de secuencia: `docs/diseño_previo.md`, sección 2.
 - Registro de rechazos con motivo: `rechazos.csv` lo genera el broker; en las pruebas con ROS simulado se
   comprueban todas las causas, y con el robot se probaron las tres (ver abajo).
 
-### Pruebas en el Jetson (lunes 06 de octubre)
+### Pruebas en el Jetson (dia lunes 06 de octubre - post entrega)
 
-El ítem 2 se había cerrado sin esta prueba por la fecha límite (lunes 05 de octubre); el 06 se probó con el brazo.
+El ítem 2 se había cerrado sin esta prueba por la fecha límite (lunes 05 de octubre), pero el dia siguente se logró probar con el brazo.
 Entorno: grupo 8, `ROS_DOMAIN_ID=50`, Jetson `172.51.1.20`, Discovery Server en el puerto 11811 (variables en
 «Configuración de red»). Evidencia en `evidencias/item_2/`.
 
-**Tres rechazos físicos** (todos `Goal was rejected`):
+**Tres rechazos físicos** (todos resultando en `Goal was rejected`):
 
 | Prueba | `client_id` | `q` [rad] | Motivo registrado |
 |---|---|---|---|
@@ -341,12 +342,12 @@ Entorno: grupo 8, `ROS_DOMAIN_ID=50`, Jetson `172.51.1.20`, Discovery Server en 
 | Workspace | `g8_workspace` | `[0.0, 1.5, 2.4, 0, 0, 0]` | `efector a 71 mm de la base, demasiado cerca` |
 | Paso excesivo | `g8_paso` | `[1.3, 0, 0, 0, 0, 0]` | `paso articular de 1.30 rad desde la pose actual, máximo 1.20` |
 
-`evidencias/item_2/rechazos_reconstruidos.csv` reúne estas filas. Es una reconstrucción: el `rechazos.csv` original se
-generó en el Jetson pero no se preservó, así que se rehízo desde las capturas, sin marcas de tiempo.
+`evidencias/item_2/rechazos_reconstruidos.csv` reúne estas filas. 
+Es una reconstrucción: el `rechazos.csv` original se generó en el Jetson pero no por una razon no se actualizo en el repositorio, así que se rehízo desde las capturas o fotos al código tomadas durante las pruebas. Estas capturas se hicieron, con el motivo principal, de depurar errores, pero finalmente nos sirvieron también para la reconstrucción
 
 **Goal válido** (`g8_valido_3`, prioridad 1, `[0.3, 0, 0, 0, 0, 0]`): `Goal accepted` → `Feedback EXECUTING` → el brazo se
 mueve → `Result success: true, message: ok` → `SUCCEEDED`, en ≈ 3.02 s. El broker no solo rechaza goals
-incorrectos: también admite y ejecuta físicamente los válidos.
+incorrectos, también admite y ejecuta físicamente los goals válidos.
 
 **Exclusión mutua** (dos goals, prueba automática):
 
@@ -355,8 +356,8 @@ incorrectos: también admite y ejecuta físicamente los válidos.
 | `g8_A2` | 1 | `[0, -0.5, 0.5, 0, 0.5, 0]` | ejecuta de inmediato; `SUCCEEDED` | 0.0109 | 3.0156 |
 | `g8_B2` | 2 | `[0.6, -0.4, 0.4, 0, 0.3, 0]` | `QUEUED` (`queue_position: 1`) hasta `elapsed_s ≈ 2.49`, luego `EXECUTING`; `SUCCEEDED` | 2.6129 | 3.0147 |
 
-B2 esperó en cola hasta que A2 terminó; nunca hubo dos goals ejecutándose a la vez. Hay además capturas de
-`/arm/queue_state` a 5 Hz y de un único publicador de `/joint_states`.
+B2 esperó en cola hasta que A2 terminó, asi que nunca hubo dos goals ejecutándose a la vez. 
+En las evidencias tambien se puede encontrar capturas de evidencia sobre `/arm/queue_state` a 5 Hz y de un único publicador de `/joint_states`.
 
 ### Pruebas
 
@@ -378,8 +379,7 @@ cd src/arm_broker && python3 -m unittest discover -s tests -p "test_esenciales.p
 | 2 | Solo el broker publica `/joint_states` | Regla de oro |
 | 2 | FIFO y Round Robin generan el orden esperado | Las políticas funcionan |
 
-Para los ítems 3 y 4 solo se conserva lo que se puede probar sin robot (sus corridas y la prueba
-física necesitan el robot):
+Para los ítems 3 y 4 solo se conserva lo que se puede probar sin el brazo:
 
 | Ítem | Archivo | Prueba | Qué demuestra |
 |---|---|---|---|
@@ -401,35 +401,36 @@ No se necesito ROS 2 o el brazo. `simulacion_ros.py` sustituye `rclpy` por doble
 incluida la máquina de estados de los goals. Las pruebas del broker se omiten si ROS 2 está
 instalado y no sustituyen la prueba real, que se hizo en el Jetson el 06 de octubre (ver «Pruebas en el Jetson»).
 
+Nota: Gracias a esta estructura, se pudo probar y realizar con éxito el item 4, pero el item 3 no se logró terminar (se explican los motivos más adelante).
+
 ## Ítem 3 — Medición bajo contención
 
-> **Estado: a medias.** El código (`experimento_item3.sh`, `metricas.py`, `simular_politicas.py`), el protocolo y la predicción están hechos y probados con datos simulados. Las corridas oficiales con el brazo no se pudieron hacer por falta de tiempo y de apoyo, así que no hay bag, CSV ni figura reales.
+> **Estado Actual: A Medias** El código (`experimento_item3.sh`, `metricas.py`, `simular_politicas.py`), el protocolo y la predicción están hechos y probados con datos simulados. Pero, las pruebas oficiales con el brazo no se pudieron hacer por falta de tiempo y de apoyo grupal, así que, en este repositorio no se encuentra hay bag, ni CSV ni figura reales.
 
-Políticas comparadas:
+Políticas que hubieran sido comparadas:
 
-- **FIFO** (obligatoria).
-- **Round Robin entre clientes** (`round_robin`), la política elegida. Recorre los clientes en
+- **FIFO** (politica principal y obligatoria).
+- **Round Robin entre clientes** (`round_robin`), la segunda política y la política elegida. Recorre los clientes en
   orden circular a partir del último atendido y toma el más antiguo del primero que tenga algo
-  pendiente. **Ignora la prioridad numérica.**
-  - *Por qué:* con clientes que mandan ráfagas, FIFO hace esperar mucho más al que llega después;
+  pendiente. Pero, **ignora la prioridad numérica.**
+  - *Por qué:* Con clientes que mandan ráfagas, FIFO hace esperar mucho más al que llega después,
     Round Robin reparte el turno y iguala las esperas medias por cliente.
-  - *Lo que no hace:* no cambia la espera media global ni acorta las esperas extremas (el último
+  - *Lo que no realiza:* No cambia la espera media global ni acorta las esperas extremas (el último
     goal de cada cliente sigue esperando casi toda la corrida), y según el orden de llegada puede
-    empeorar el índice de inanición. Está predicho en `docs/diseño_previo.md` y se discute en el
+    empeorar el índice de inanición. Está detallado en `docs/diseño_previo.md` y se discute finalmente en el
     cierre reflexivo.
 
 Convención de prioridad: **mayor número = más urgente** (ver `MoveArm.action`).
 
 ### Experimento justo
 
-Las dos corridas usan las mismas condiciones y cambia solo `politica:=`: misma traza oficial del
-docente, cuatro clientes con las mismas prioridades (A=1, B=2, C=3, D=4), mismas repeticiones,
+Si se hubieran puesto a prueba, posiblemente las dos pruebas usarían las mismas condiciones y cambiarían solo `politica:=`, usando la misma traza oficial compartida por el profesor, cuatro clientes con las mismas prioridades (A=1, B=2, C=3, D=4), mismas repeticiones,
 `modo:=asincrono`, misma `pausa_s`, misma duración e interpolación y el mismo procedimiento de
 inicio (broker → `ros2 bag record` → clientes con un `inicio_unix` común y 0.5 s de escalón).
 El protocolo completo, la predicción del p95 y la plantilla de resultados están en
 [`docs/diseño_previo.md`](docs/diseño_previo.md).
 
-Antes de las corridas oficiales se realiza el ensayo con la traza provisional
+Si se hubiera realizado las pruebas oficiales, antes de ello, se realizo el ensayo con la traza provisional
 ([`docs/ensayo_previo_ros2.md`](docs/ensayo_previo_ros2.md)): broker a ~5 Hz en
 `/arm/queue_state`, un solo publicador en `/joint_states`, cola con varios goals, `ros2 bag`,
 exportación y análisis.
@@ -452,11 +453,12 @@ Notas sobre la medición:
 - La detección de violaciones desde los CSV es un indicio (un bag no dice quién publicó cada
   mensaje); la prueba de publicador único es `ros2 topic info /joint_states -v`, que el script
   guarda en `publicadores_joint_states.txt`.
+- Los clientes, en las pruebas de laboratorio, hubieran tenido nombres de los integrantes del grupo 8, para poner a prueba las políticas.
 
 ## Ítem 4 — Puerta a la cinemática inversa
 
-Un único objetivo cartesiano `(x, y, z)` sobre la mesa, resuelto por el **firmware** con
-`send_coords()` (pymycobot): **el equipo no escribe un solver de IK**. Luego se lee el `q`
+Un único objetivo cartesiano `(x, y, z)` sobre la mesa, resuelto por el firmware con
+`send_coords()` (pymycobot), tampoco el grupo no escribe un solver de IK. Luego se lee el `q`
 realmente ejecutado (`get_angles()`, en grados), se pasa a radianes, se calcula `FK(q_real)` con
 `fk.py` y se mide el error contra lo solicitado (≤ 10 mm). `get_coords()` es dato de apoyo.
 
@@ -472,8 +474,7 @@ python3 herramientas/auditar_ik.py --x X --y Y --z Z --rx RX --ry RY --rz RZ \
     --confirmo-espacio-despejado --guardar              # la auditoría; agrega a evidencias/item_4/
 ```
 
-**Sesión con el brazo (lunes 06 de octubre).** El ítem 4 también había quedado sin la sesión por la fecha límite del
-05; se hizo el 06.
+**Sesión de pruebas con el brazo (06 de octubre)** . Ya que, el ítem 4 también había quedado sin pruebas debido a las mismas razones del item 2.
 
 1. `--plantilla`: imprimió la tabla de evidencia vacía (la herramienta estaba lista).
 2. `--solo-leer` (sin mover): `get_angles()` = (33.48, −24.43, 23.11, −1.05, 16.52, −23.11)°, `get_coords()` =
@@ -487,27 +488,28 @@ python3 herramientas/auditar_ik.py --x X --y Y --z Z --rx RX --ry RY --rz RZ \
 está en `evidencias/item_4/auditoria_ik.csv` (reconstruida: el CSV original del laboratorio no se preservó; ver
 `evidencias/item_4/README.md`).
 
-**Codo contrario.** El firmware seleccionó una solución de IK cercana a la configuración articular inicial
+**Codo contrario:** El firmware seleccionó una solución de IK cercana a la configuración articular inicial
 (cambios de −7.65°, +5.01°, −22.94°, +14.84°, +7.91° y −0.18° en J1…J6), manteniendo continuidad de movimiento en
 lugar de un cambio brusco hacia una solución alternativa de codo contrario. La API de `pymycobot` no expone el
 criterio interno exacto con el que se elige la rama, por lo que la conclusión se basa en los ángulos iniciales y
-finales observados y no en el algoritmo interno del firmware. Detalle en
+finales observados y no en el algoritmo interno del firmware. Se detalla en
 [`docs/item4_auditoria_ik.md`](docs/item4_auditoria_ik.md).
 
 ## Lista de entregables
 
--  Paquetes `arm_broker` y `arm_broker_interfaces` en GitHub.
--  README con instrucciones de ejecución (este archivo).
--  Documento de diseño previo: tabla DH, diagrama de secuencia y predicción del p95 por política (`docs/diseño_previo.md`).
--  Validación de las 3 poses del ítem 1 (`evidencias/item1/`).
--  Pruebas del ítem 2 con el robot (06 de octubre): rechazos, goal válido y exclusión mutua (`evidencias/item_2/`).
--  Auditoría del ítem 4 con el brazo: `auditar_ik.py`, `evidencias/item_4/auditoria_ik.csv` y `docs/item4_auditoria_ik.md`.
--  Cierre reflexivo (`docs/cierre_reflexivo.md`), razonado con la predicción.
-## Lo que esta a medias
--  Ítem 3 (código y predicción hechos): faltaron el bag, el CSV y la figura comparativa (`evidencias/item_3/`)
--  Video de 3 minutos.
+- Paquetes `arm_broker` y `arm_broker_interfaces` en GitHub.
+- README con instrucciones de ejecución (este archivo).
+- Documento de diseño previo: tabla DH, diagrama de secuencia y predicción del p95 por política (`docs/diseño_previo.md`).
+- Validación de las 3 poses del ítem 1 (`evidencias/item1/`).
+- Pruebas del ítem 2 con el robot (06 de octubre): rechazos, goal válido y exclusión mutua (`evidencias/item_2/`).
+- Auditoría del ítem 4 con el brazo: `auditar_ik.py`, `evidencias/item_4/auditoria_ik.csv` y `docs/item4_auditoria_ik.md`.
+- Cierre reflexivo (`docs/cierre_reflexivo.md`), razonado con la predicción.
 
-## Rúbrica 
+## Lo que falto por entregar
+- Ítem 3 (código y predicción hechos): faltaron el bag, el CSV y la figura comparativa (`evidencias/item_3/`).
+- Video de 3 minutos.
+
+## Rúbrica (20 puntos)
 
 | Criterio | Pts | Dónde se evidencia |
 |---|:-:|---|
