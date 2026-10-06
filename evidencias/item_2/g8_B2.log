@@ -1,0 +1,138 @@
+'EOF'
+Waiting for an action server to become available...
+Sending goal:
+     joint_positions:
+- 0.6
+- -0.4
+- 0.4
+- 0.0
+- 0.3
+- 0.0
+client_id: g8_B2
+priority: 2
+
+Goal accepted with ID: 43bae9c135934f2ba20c14671163bd22
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 0.09407663345336914
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 0.2945711612701416
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 0.4941840171813965
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 0.6940546035766602
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 0.8944745063781738
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 1.0940721035003662
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 1.2940607070922852
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 1.4942004680633545
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 1.6947290897369385
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 1.89408540725708
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 2.094123125076294
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 2.294774293899536
+
+Feedback:
+    state: QUEUED
+queue_position: 1
+elapsed_s: 2.4941353797912598
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.004469156265258789
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.30550718307495117
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.6065175533294678
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.9075114727020264
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.2085647583007812
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.509573221206665
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.8107357025146484
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.111884117126465
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.413193941116333
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.71418833732605
+
+Result:
+    success: true
+message: ok
+wait_time_s: 2.612924575805664
+exec_time_s: 3.0146658420562744
+
+Goal finished with status: SUCCEEDED
+EOF
