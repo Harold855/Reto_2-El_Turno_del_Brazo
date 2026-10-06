@@ -524,8 +524,10 @@ finales observados y no en el algoritmo interno del firmware. Se detalla en
 
 ## Equipo
 
-| Integrante | Equipo |
-|---|---|
-| Jorge Daniel Rivera Nagaro | Equipo 8 |
-| Harold Lincoln Payco Espinoza | Equipo 8 |
-| Rodrigo Sebastián Escobar Rosado | Equipo 8 |
+| Integrante | Equipo | Item desarrollado |
+|---|---|---|
+| Jorge Daniel Rivera Nagaro | Equipo 8 | Item 4 |
+| Harold Lincoln Payco Espinoza | Equipo 8 | Item 2 |
+| Rodrigo Sebastián Escobar Rosado | Equipo 8 | Item 1 |
+
+Nota Final: Parte de la estructura de este README fue generado con IA, para tener una visión clara sobre como estructurar bien nuestro proyecto. Sin embargo, posteriormente se corrigió detalles que habían sido mal generados, también se detallaron los resultados y se redactaron comentarios para explicar el código, motivos y el desarrollo del proyecto.
