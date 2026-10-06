@@ -1,0 +1,39 @@
+ITEM 4 - AUDITORIA DE CINEMATICA INVERSA
+Reconstruido a partir de la salida registrada durante las pruebas en laboratorio
+
+Objetivo cartesiano:
+X = 129.3 mm
+Y = 11.4 mm
+Z = 398.8 mm
+
+Orientación:
+Rx = -92.46 deg
+Ry = -22.42 deg
+Rz = -39.03 deg
+
+Velocidad = 20
+Modo = 0
+Espera = 5 s
+
+get_angles() [deg]:
+(25.83, -19.42, 0.17, 13.79, 24.43, -23.29)
+
+q_real [rad]:
+(0.4508, -0.3389, 0.0030, 0.2407, 0.4264, -0.4065)
+
+get_coords() [mm]:
+(126.8, 11.9, 394.6)
+
+FK(q_real) [mm]:
+(127.3, 14.1, 400.0)
+
+Error respecto al objetivo:
+X = -2.02 mm
+Y = +2.75 mm
+Z = +1.20 mm
+
+Error cartesiano total:
+3.62 mm
+
+Criterio:
+error <= 10 mm

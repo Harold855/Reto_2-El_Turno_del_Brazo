@@ -1,0 +1,2 @@
+x_obj,y_obj,z_obj,q1_deg,q2_deg,q3_deg,q4_deg,q5_deg,q6_deg,x_fk,y_fk,z_fk,x_robot,y_robot,z_robot,error_mm,rx_obj,ry_obj,rz_obj,velocidad,ex_mm,ey_mm,ez_mm,dif_fk_robot_mm
+129.3000,11.4000,398.8000,25.8300,-19.4200,0.1700,13.7900,24.4300,-23.2900,127.2813,14.1495,399.9999,126.8000,11.9000,394.6000,3.6159,-92.4600,-22.4200,-39.0300,20,-2.0187,2.7495,1.1999,5.8695
