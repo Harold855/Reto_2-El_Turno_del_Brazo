@@ -255,7 +255,7 @@ class ArmBroker(Node):
         goal_handle = pedido.goal_handle
 
         self.get_logger().info(
-            f'EJECUTANDO {pedido!r} · esperó {pedido.espera_s:.2f}s')
+            f'EJECUTANDO {pedido!r} · esperó {pedido.espera_s():.2f}s')
         pedido.lanzado = True
         goal_handle.execute()   # El executor corre execute_callback en otro hilo
 
@@ -271,7 +271,7 @@ class ArmBroker(Node):
         resultado = MoveArm.Result()
         resultado.success = False
         resultado.message = f'error interno del broker: {error!r}'
-        resultado.wait_time_s = float(pedido.espera_s)
+        resultado.wait_time_s = float(pedido.espera_s())
         resultado.exec_time_s = 0.0
         pedido.resultado = resultado
 
@@ -322,7 +322,7 @@ class ArmBroker(Node):
                 goal_handle.canceled()
                 resultado.success = False
                 resultado.message = 'cancelado mientras esperaba en cola'
-                resultado.wait_time_s = float(pedido.espera_s)
+                resultado.wait_time_s = float(pedido.espera_s())
                 resultado.exec_time_s = 0.0
                 return resultado
 
@@ -340,7 +340,7 @@ class ArmBroker(Node):
                 # n_aceptados y n_rechazados no cambian: cuentan lo que decidió goal_callback
                 self.get_logger().warn(
                     f'ABORTADO: paso_al_ejecutar [{pedido.client_id} p{pedido.priority}]: {motivo}')
-                resultado.wait_time_s = float(pedido.espera_s)
+                resultado.wait_time_s = float(pedido.espera_s())
                 resultado.success = False
                 resultado.message = f'rechazado al ejecutar: {motivo}'
                 goal_handle.abort()
@@ -432,7 +432,7 @@ class ArmBroker(Node):
             msg.queued_goal_ids = [p.goal_id for p in self.pendientes]
             msg.queued_clients = [p.client_id for p in self.pendientes]
             msg.queued_priorities = [min(255, max(0, p.priority)) for p in self.pendientes]
-            msg.queued_wait_s = [p.espera_s for p in self.pendientes]
+            msg.queued_wait_s = [p.espera_s() for p in self.pendientes]
             msg.total_accepted = self.n_aceptados
             msg.total_rejected = self.n_rechazados
             msg.total_completed = self.n_completados
@@ -444,7 +444,7 @@ class ArmBroker(Node):
                 fb = MoveArm.Feedback()
                 fb.state = 'QUEUED'
                 fb.queue_position = posicion
-                fb.elapsed_s = p.espera_s
+                fb.elapsed_s = p.espera_s()
                 p.goal_handle.publish_feedback(fb)
             except Exception:
                 pass
