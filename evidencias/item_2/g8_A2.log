@@ -1,0 +1,73 @@
+cat > evidencias/item2/g8_A2.log <<'EOF'
+Waiting for an action server to become available...
+Sending goal:
+     joint_positions:
+- 0.0
+- -0.5
+- 0.5
+- 0.0
+- 0.5
+- 0.0
+client_id: g8_A2
+priority: 1
+
+Goal accepted with ID: f0375aec3d5f4f1daf94ee9d1adbabe5
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.00433802604675293
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.305422306060791
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.6066288948059082
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 0.9077694416046143
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.2088828086853027
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.510103464126587
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 1.8114032745361328
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.112668514251709
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.413862705230713
+
+Feedback:
+    state: EXECUTING
+queue_position: 0
+elapsed_s: 2.7149810791015625
+
+Result:
+    success: true
+message: ok
+wait_time_s: 0.010889768600463867
+exec_time_s: 3.0156238079071045
+
+Goal finished with status: SUCCEEDED
+EOF
