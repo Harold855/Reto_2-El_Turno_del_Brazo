@@ -2,7 +2,7 @@
 
 ## Contexto
 
-Durante la sesión física con el JetCobot se ejecutó el Ítem 4 del Reto 2 utilizando `herramientas/auditar_ik.py`.
+Durante las pruebas física con el JetCobot se ejecutaron el Ítem 4 utilizando `herramientas/auditar_ik.py`.
 
 El procedimiento realizado fue:
 
@@ -59,7 +59,7 @@ Criterio cumplido del reto:
 ## Sobre `auditoria_ik_reconstruida.csv`
 
 El archivo original `auditoria_ik.csv` fue generado durante las pruebas en el laboratorio mediante la opción `--guardar`. Sin embargo, no se llegaron a 
-preservar posteriormente en el repositorio. Por esta razón y por falta de tiempo, se creo esta reconstrucción
+preservar posteriormente en el repositorio. Debido a que la carpeta, en el laboratorio, se creo con otro nombre y no se pudo guardar en este repositorio. Por ello, se creo esta reconstrucción.
 
 Este archivo fue reconstruido utilizando:
 
@@ -84,7 +84,7 @@ La diferencia entre `FK(q_real)` y `get_coords()` nos dio aproximadamente:
 
 ## Interpretación de la solución de IK
 
-El firmware eligió una configuración articular relativamente cercana a la postura inicial del robot, manteniendo continuidad de movimiento.
+El firmware eligió una configuración articular relativamente cercana a la postura inicial del brazo, manteniendo continuidad de movimiento.
 
 La API de `pymycobot` no expone el criterio interno exacto utilizado para seleccionar entre distintas soluciones de cinemática inversa.
 Por tanto, la continuidad articular, los límites articulares o criterios internos del firmware se consideran explicaciones posibles.
