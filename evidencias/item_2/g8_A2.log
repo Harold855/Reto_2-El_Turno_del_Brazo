@@ -1,4 +1,4 @@
-cat > evidencias/item2/g8_A2.log <<'EOF'
+'EOF'
 Waiting for an action server to become available...
 Sending goal:
      joint_positions:
