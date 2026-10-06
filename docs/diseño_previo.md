@@ -1,9 +1,16 @@
-# Documento de diseño previo — Reto 2 · El Turno del Brazo
+# Documento de diseño previo — Reto 2 (El Turno del Brazo)
 
 | Campo | Valor |
 |---|---|
 | Equipo / `ROS_DOMAIN_ID` | 8 / 50 (42 + n° de grupo: 8) |
 | Integrantes | `Harold Lincoln Payco Espinoza, Jorge Daniel Rivera Nagaro, Rodrigo Sebastian Escobar Rosado` |
+
+**Motivo del cambio de este documento luego de haberlo subido al aula virtual** 
+
+Los ítems 2 y 4 se habían cerrado sin pruebas físicas por la fecha límite de entrega (lunes 05
+de octubre). El lunes 06 de octubre se aprovechó el espacio para probarlos con el robot y se actualizaron el código, la
+evidencia y la documentación, resultando en que estos items queden completados. El ítem 3 se realizó a medias, su código se creó
+inicialmente para probarlo en el brazo, pero por falta de tiempo y de apoyo grupal no se pudo completar la medición. 
 
 ## 1. Tabla DH y predicción previa (ítem 1)
 
@@ -36,11 +43,14 @@ usan las 3 primeras (`cero`, `ready`, `girada`):
 | `ready` | [0, −0.5, 0.5, 0, 0.5, 0] | 96.62 | −39.43 | 402.83 |
 | `girada` | [0.6, −0.4, 0.4, 0, 0.3, 0] | 102.23 | 11.03 | 407.62 |
 
-Congelada en `evidencias/item1/predicciones_antes_de_medir.txt` (commit `a0cbc35`, 2026-09-30 20:10, hora
-de Lima), anterior a la validación en el robot (`84e9f1a`, 21:01). **Criterio de aceptación:** error de
-posición ≤ 10 mm en las tres poses. Procedimiento: se lee el `q` realmente adoptado (`get_angles()`), se
-calcula `FK(q_real)` y se compara con la posición que reporta el robot (`get_coords()`). Los resultados
-(5.8, 5.9 y 5.9 mm) están en `tabla_dh.md` §6 y en el README.
+Se encuentra en `evidencias/item1/predicciones_antes_de_medir.txt`. 
+
+**Criterio de aceptación:** 
+
+Error de posición ≤ 10 mm en las tres poses. 
+
+Procedimiento: Se lee el `q` realmente adoptado (`get_angles()`), se calcula `FK(q_real)` y se compara con la posición 
+que reporta el robot (`get_coords()`). Los resultados (5.8, 5.9 y 5.9 mm) están en `tabla_dh.md` §6 y en el README.
 
 ## 2. Diagrama de secuencia (ítem 2)
 
@@ -76,6 +86,78 @@ sequenceDiagram
     A->>W: pedido.fin (libera el brazo)
     Note over A,C: /arm/queue_state a 5 Hz
 ```
+
+## 2.1 Pruebas con el robot (ítem 2, 06 de octubre)
+
+El ítem 2 se había cerrado sin pruebas físicas. El día siguente se aprovechó la tardepara probar el broker con el brazo y se agregó la evidencia en `evidencias/item_2/`.
+
+**Entorno usado**
+
+```
+Grupo: 8
+ROS_DOMAIN_ID = 42 + 8 = 50
+Jetson / JetCobot: 172.51.1.20
+Discovery Server: puerto 11811
+ROS 2: Humble
+RMW: rmw_fastrtps_cpp
+```
+
+En el Jetson (donde corre `arm_broker` y el Discovery Server):
+
+```bash
+export ROS_DOMAIN_ID=50
+export ROS_LOCALHOST_ONLY=0
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export ROS_DISCOVERY_SERVER=127.0.0.1:11811
+export FASTRTPS_DEFAULT_PROFILES_FILE=/home/jetson/super_client_configuration_file.xml
+```
+
+En la Raspberry Pi 400 (clientes):
+
+```bash
+export ROS_DOMAIN_ID=50
+export ROS_LOCALHOST_ONLY=0
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export ROS_DISCOVERY_SERVER=172.51.1.20:11811
+export FASTRTPS_DEFAULT_PROFILES_FILE=$HOME/super_client_g8.xml
+```
+
+**Tres rechazos físicos** (`goal_callback`, admisión con la FK). Todos terminaron con `Goal was rejected`:
+
+| Prueba | `client_id` | `q` enviado [rad] | Resultado | Motivo registrado |
+|---|---|---|---|---|
+| Límite articular | `g8_limite` (prioridad 1) | `[3.5, 0, 0, 0, 0, 0]` | REJECT | `1_Joint fuera de rango: 3.500 rad, límite [-2.93, 2.93]` |
+| Workspace | `g8_workspace` | `[0.0, 1.5, 2.4, 0, 0, 0]` | REJECT | `efector a 71 mm de la base, demasiado cerca` |
+| Paso excesivo | `g8_paso` | `[1.3, 0, 0, 0, 0, 0]` | REJECT | `paso articular de 1.30 rad desde la pose actual, máximo 1.20` |
+
+Son las filas representativas de cada causa de `evidencias/item_2/rechazos_reconstruidos.csv`. Ese CSV es una
+reconstrucción: el `rechazos.csv` original se generó en el Jetson durante la prueba pero no se preservó en el
+repositorio, así que se rehízo a partir de las capturas (comandos enviados, `Goal was rejected` y el `cat` del CSV
+original); no se reconstruyeron las marcas de tiempo (`evidencias/item_2/README.md`). Capturas:
+`rechazo_limite1.jpeg`, `rechazo_limite2.jpeg`, `rechazo_workspace.jpeg` y `rechazo_paso.jpeg`.
+
+**Goal válido.** Con `client_id: g8_valido_3`, prioridad 1 y `joint_positions: [0.3, 0, 0, 0, 0, 0]` se obtuvo el
+flujo completo:
+
+```
+Goal accepted → Feedback EXECUTING → el brazo se mueve → Result (success: true, message: ok)
+→ Goal finished with status: SUCCEEDED          (≈ 3.02 s de ejecución)
+```
+
+Es evidencia de que el broker no solo rechaza goals incorrectos: también admite y **ejecuta físicamente**
+solicitudes válidas (`goal_valido_1.jpeg`, `goal_valido_2.jpeg`).
+
+**Exclusión mutua.** Una prueba automática lanzó dos goals de clientes distintos, uno tras otro
+(`exclusion_mutua_A2_B2.jpeg`, `g8_A2.log`, `g8_B2.log`):
+
+| Cliente | Prioridad | `q` [rad] | Comportamiento | `wait_time_s` | `exec_time_s` |
+|---|:-:|---|---|---:|---:|
+| `g8_A2` | 1 | `[0.0, -0.5, 0.5, 0.0, 0.5, 0.0]` | Pasó directo a ejecutar; `SUCCEEDED` | 0.0109 | 3.0156 |
+| `g8_B2` | 2 | `[0.6, -0.4, 0.4, 0.0, 0.3, 0.0]` | `state: QUEUED`, `queue_position: 1` repetido hasta `elapsed_s ≈ 2.49`; luego `EXECUTING`, `queue_position: 0`; `SUCCEEDED` | 2.6129 | 3.0147 |
+
+B2 no empezó hasta que A2 terminó: su espera (2.61 s) es la ejecución restante de A2, y nunca hubo dos goals en
+`EXECUTING` a la vez. También hay capturas de `/arm/queue_state` a 5 Hz (`queue_state_5hz.jpeg`) y de un único
+publicador de `/joint_states` (`publicador_unico_joint_states.jpeg`).
 
 ## 3. Medición bajo contención: FIFO frente a Round Robin (ítem 3)
 
@@ -137,14 +219,18 @@ con su número real de poses antes de congelar este documento.**
 | Equidad de Jain a mitad de corrida | 0.500 (A:10, B:10, C:0, D:0) | 1.000 (5 c/u) |
 | Goals rechazados | 0 | 0 |
 
-**Resumen de esta prediccion** FIFO y Round Robin tendrán la misma espera media y
+**Resumen de esta prediccion:**
+
+FIFO y Round Robin tendrán la misma espera media y
 un p95 global casi igual (≈ 111–112 s con la traza de referencia); FIFO dará esperas muy
 desiguales según el orden de llegada (prioridad 1: p95 ≈ 27 s, prioridad 4: ≈ 117 s) mientras
 Round Robin las igualará (≈ 110–117 s para todas); en la mitad de la corrida Jain será ≈ 0.5 con
 FIFO y ≈ 1.0 con Round Robin; y el índice de inanición será **peor** en Round Robin (≈ 110 s frente
 a ≈ 27 s) porque en este orden de llegada el cliente de menor prioridad (A) es el primero en FIFO.
 
-**¿Cómo se contrasta?** La medición tiene resolución de 0.2 s (`/arm/queue_state` a 5 Hz) y no ve
+**Cómo se contrasta:** 
+
+La medición tiene resolución de 0.2 s (`/arm/queue_state` a 5 Hz) y no ve
 los goals que empiezan a ejecutarse antes de la siguiente publicación, así que se aceptan
 diferencias de unos pocos segundos.
 
@@ -192,6 +278,7 @@ evidencias/
     ├── comparacion_politicas.png
     └── resultados.md                  (copia de resultados_plantilla.md, completada)
 ```
+Nota: Anteriormente se diseño esta estructura en el repositorio, con el fin de tener una idea clara sobre lo que realizariamos, como grupo, en el item 3. Sin embargo, debido a los motivos explicados. Se tuvo que borrar estas evidencias ya que no contenían nada en su interior.
 
 ### 3.5 Comandos de ejecución
 
@@ -226,24 +313,28 @@ medidas lado a lado, y contraste punto por punto con esta predicción.
 
 ## 4. Auditoría de la IK del firmware con la FK propia (ítem 4)
 
-E**No escribimos un solver de cinemática inversa**, si no pedimos un objetivo cartesiano con
-`send_coords()` y deja que el firmware resuelva la IK. Luego se lee el `q` que el brazo adoptó
-(`get_angles()`, grados → radianes), se aplica la FK propia y se compara con el objetivo pedido:
+**No escribimos un solver de cinemática inversa**: pedimos un objetivo cartesiano con `send_coords()` y dejamos
+que el firmware resuelva la IK. Luego se lee el `q` que el brazo adoptó (`get_angles()`, grados → radianes), se
+aplica la FK propia y se compara con el objetivo pedido:
 
 `e = √((X_FK − X_obj)² + (Y_FK − Y_obj)² + (Z_FK − Z_obj)²)`, criterio **e ≤ 10 mm**.
 
-- **Predicción antes de medir.** Si el firmware llega al objetivo, `e` queda cerca del desfase conocido
-  de la FK frente a `get_coords()` (≈ 5.9 mm en el ítem 1, casi constante, ≈ +5.5 mm en z); un valor
-  mucho mayor indicaría un objetivo inalcanzable con esa orientación o un problema de marco.
-- **Objetivo.** Primera corrida: reproducir un punto que el firmware ya alcanzó (la pose `ready`,
-  `get_coords()` ≈ (100.9, −40.5, 395.4) mm, con la orientación leída en el robot). Los valores finales
-  se miden en la sesión.
-- **Herramienta y evidencia.** `herramientas/auditar_ik.py` (probada sin robot) y
-  `evidencias/item_4/auditoria_ik.csv`, que por ahora solo tiene el encabezado: las filas se agregan
-  con `--guardar` durante la sesión con el robot.
-- **Estado.** Herramienta, pruebas y documento completados; la sesión con el brazo no se realizó y se describe como se hubiera hecho. Detalle en
-  [`item4_auditoria_ik.md`](item4_auditoria_ik.md).
+- **Predicción antes de medir.** Si el firmware llega al objetivo, `e` queda cerca del desfase conocido de la FK
+  frente a `get_coords()` (≈ 5.9 mm en el ítem 1, casi constante, ≈ +5.5 mm en z); un valor mucho mayor
+  indicaría un objetivo inalcanzable con esa orientación o un problema de marco.
+- **Sesión del 06 de octubre.** Diagnóstico con `--solo-leer` (sin mover): FK(q_real) a 5.94 mm de
+  `get_coords()`. Después, objetivo cartesiano `[129.3, 11.4, 398.8]` mm con orientación
+  `[−92.46, −22.42, −39.03]` (la pose actual desplazada +20 mm en X), velocidad 20.
+- **Resultado.** El firmware adoptó `q = (25.83, −19.42, 0.17, 13.79, 24.43, −23.29)°` y la FK dio
+  (127.3, 14.1, 400.0) mm: errores (−2.02, +2.75, +1.20) mm y **error cartesiano 3.62 mm ≤ 10 mm**.
+- **Codo contrario.** El firmware eligió una solución cercana a la configuración inicial (continuidad de
+  movimiento, sin cambiar los signos de `q2`, `q3`, `q5`); `pymycobot` no expone el criterio interno, así que la
+  conclusión se basa en los ángulos observados.
+- **Herramienta y evidencia.** `herramientas/auditar_ik.py` y `evidencias/item_4/auditoria_ik.csv` (una fila con la
+  auditoría oficial, reconstruida porque el CSV original del laboratorio no se preservó). Detalle en [`item4_auditoria_ik.md`](item4_auditoria_ik.md).
 
 ## 5. Cierre reflexivo
 
-Ver [`cierre_reflexivo.md`](cierre_reflexivo.md): la decisión se razona con la predicción, porque no se lograron realizar las pruebas oficiales.
+Ver [`cierre_reflexivo.md`](cierre_reflexivo.md): la decisión se razona con la predicción.
+
+Nota Final: Para la estructura de este documento, se realizó con IA, para tener una visión sobre como podriamos organizarla. Aunque, después, por nuestra parte, se terminó por corregir datos mal implementados y detallar mejor la estructura de todo el documento. 
